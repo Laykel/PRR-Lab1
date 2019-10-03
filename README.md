@@ -6,15 +6,15 @@ Nous souhaitons implémenter un algorithme simple permettant de synchroniser app
 horloges locales des tâches d'une application répartie. Comme nous le savons, chaque site d'un
 environnement réparti possède sa propre horloge système, mais aussi, cette horloge a un décalage et
 une dérive qui lui est propre. Le but de notre algorithme est de rattraper ce décalage sans pour autant
-corriger l'horloge du système. Pour ce faire, nous distinguons 2 horloges. L'horloge système hsys est
+corriger l'horloge du système. Pour ce faire, nous distinguons 2 horloges. L'horloge système `hsys` est
 l'heure retournée par un appel système : cette horloge désigne la minuterie mise à jour par le système
 d'exploitation d'un site. Sous un système protégé, il faut avoir les privilèges administrateurs pour le
 modifier et, pour contourner ce problème, une tâche applicative peut interpréter le temps comme la
 valeur de l'horloge système sur le site où elle réside additionnée à un décalage. Dans ce qui suit, le
-résultat de cette opération est appelé l'horloge locale. Ainsi pour la tâche applicative i, nous avons :
-`hlocale(i) = hsys(site de i) + décalage(i)`
+résultat de cette opération est appelé l'horloge locale. Ainsi pour la tâche applicative `i`, nous avons :
+`hlocale(i) = hsys(site de i) + décalage(i)`.
 
-La synchronisation des horloges revient alors à trouver `décalage(i)` pour chaque tâche i de telle sorte
+La synchronisation des horloges revient alors à trouver `décalage(i)` pour chaque tâche `i` de telle sorte
 que `hlocale(i)` est identique pour toutes les tâches formant l'application répartie.
 
 ## Protocole de synchronisation
@@ -22,7 +22,7 @@ que `hlocale(i)` est identique pour toutes les tâches formant l'application ré
 Les sites se divisent en 2 groupes : le maître qui est unique et les esclaves qui sont subordonnés au
 maître pour l'exécution de l'algorithme. Cette structure se représente ainsi :
 
-- image
+![Master and slaves structure](img/MasterAndSlaves.png)
 
 Si P désigne les tâches de l'application, chaque tâche peut alors interroger son gestionnaire d'horloge
 (esclave sur la figure) résidant sur le même site qu'elle. Elle obtient alors une heure qui est
@@ -38,6 +38,7 @@ Périodiquement, le maître diffuse 2 messages. Le premier message est de type S
 identifiant. Le second message, FOLLOW_UP, diffusé immédiatement après le premier, contient
 l'heure, tmaître, auquel le maître a émis le message SYNC.
 
+```
 boucle
     identifiant <- identifiant + 1
     msg <- <SYNC,identifiant>
@@ -47,12 +48,13 @@ boucle
     diffusion de msg
     attente de k secondes
 fin boucle
+```
 
 La correction de l'écart se réalise indépendamment par tous les esclaves lors de la réception du
-message FOLLOW_UP. Les esclaves obtiennent ti = hsys(i) quand ils reçoivent le message SYNC, puis
+message FOLLOW_UP. Les esclaves obtiennent `ti = hsys(i)` quand ils reçoivent le message SYNC, puis
 à la réception du message FOLLOW_UP, ces esclaves calculent
 
-écart(i) = tmaître - ti.
+`écart(i) = tmaître - ti`
 
 Sur un environnement idéal (temps de calcul instantané et délai de transmission nul), les horloges du
 maître et de ses esclaves seraient synchrones à l'issue de cette première étape.
@@ -64,7 +66,7 @@ l'esclave contenant l'heure qu'il a reçu le message DELAY_REQUEST. L'esclave pe
 son décalage par rapport au maître : si tes est l'heure locale d'émission de DELAY_REQUEST et tm
 celle de sa réception par le maître, alors
 
-délai(i) = (tm - tes) / 2.
+`délai(i) = (tm - tes) / 2.`
 
 Notons que l'esclave insère aussi un identifiant dans le message DELAY_REQUEST. Cet identifiant
 est renvoyé par le maître et sert de contrôle.
@@ -76,7 +78,7 @@ temps aléatoire tiré depuis le même intervalle.
 
 La figure ci-dessous illustre un échange typique.
 
-- image
+![Typical communication](img/TypicalCommunication.png)
 
 ## Remarques sur le protocole
 
