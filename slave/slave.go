@@ -12,7 +12,11 @@ import (
 )
 
 func main() {
-    conn, err := net.ListenPacket("udp", protocol.MulticastAddress) // listen on port
+    // t1 := time.Now()
+    // t2 := time.Now()
+    // diff := t2.Sub(t1)
+
+	conn, err := net.ListenPacket("udp", protocol.MulticastAddress) // listen on port
 	if err != nil {
 		log.Fatal(err)
 	}
