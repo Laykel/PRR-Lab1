@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// Move this in separate package
+// TODO: Move this in separate package (protocol?)
 // ----------------------------------------------------------------------------------------
 func sendMulticast(message string) {
 	conn, err := net.Dial("udp", protocol.MulticastAddress)
@@ -24,7 +24,7 @@ func sendMulticast(message string) {
 }
 
 func sendUnicast(message string, ip net.Addr) {
-	conn, err := net.Dial("udp", ip.String()+":"+string(protocol.UnicastPort))
+	conn, err := net.Dial("udp", ip.String()+protocol.UnicastPort)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,9 +52,10 @@ func doEvery(seconds uint, f func()) {
 	}
 }
 
+// TODO: Move in protocol package?
 // Send SYNC and FOLLOW_UP messages to multicast
 func syncAndFollowUp() {
-	// Generate ID
+	// TODO: Generate ID
 	// ...
 
 	// SYNC (message code + ID)
@@ -72,7 +73,7 @@ func main() {
 	go doEvery(protocol.SyncPeriod, syncAndFollowUp)
 
 	// Listen on the UDP port specified in protocol
-	conn, err := net.ListenPacket("udp", ":"+protocol.UnicastPort)
+	conn, err := net.ListenPacket("udp", protocol.UnicastPort)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -86,7 +87,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		// Test whether the DELAY_REQUEST is valid
+		// TODO: Test whether the DELAY_REQUEST is valid
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 		for s.Scan() {
 			s := s.Text() + " from " + clientAddress.String() + "\n"
@@ -95,7 +96,7 @@ func main() {
 			}
 		}
 
-        // If not, continue (go to next loop iteration)
+        // TODO: If not, continue (go to next loop iteration)
 
 		// Syscall for time
 		tM := time.Now()
