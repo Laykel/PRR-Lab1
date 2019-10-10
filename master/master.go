@@ -1,71 +1,30 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
-	"github.com/Laykel/PRR-Lab1/protocol"
-	"io"
-	"log"
-	"net"
-	"os"
-	"time"
+    "bufio"
+    "bytes"
+    "github.com/Laykel/PRR-Lab1/protocol"
+    "log"
+    "net"
+    "time"
 )
 
-// TODO: Move this in separate package (protocol?)
-// ----------------------------------------------------------------------------------------
-func sendMulticast(message string) {
-	conn, err := net.Dial("udp", protocol.MulticastAddress)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	conn.Write([]byte(message))
-}
-
-func sendUnicast(message string, ip net.Addr) {
-	conn, err := net.Dial("udp", ip.String()+protocol.UnicastPort)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-	go func() {
-		mustCopy(os.Stdout, conn)
-	}()
-	mustCopy(conn, os.Stdin)
-}
-
-func mustCopy(dst io.Writer, src io.Reader) {
-	if _, err := io.Copy(dst, src); err != nil {
-		log.Fatal(err)
-	}
-}
-
-// ----------------------------------------------------------------------------------------
-
 // Call given function every given number of seconds
-func doEvery(seconds uint, f func()) {
-	t := time.NewTicker(time.Duration(seconds) * time.Second)
+func doEvery(seconds uint, f func(uint)) {
+	ticker := time.NewTicker(time.Duration(seconds) * time.Second)
+	defer ticker.Stop()
 
-	for _ = range t.C {
-		f()
+	var counter uint
+
+	for _ = range ticker.C {
+		f(counter)
+		counter++
 	}
 }
 
-// TODO: Move in protocol package?
-// Send SYNC and FOLLOW_UP messages to multicast
-func syncAndFollowUp() {
-	// TODO: Generate ID
-	// ...
-
-	// SYNC (message code + ID)
-	sendMulticast("CODE + ID")
-
-	// Syscall for time
-	tMaster := time.Now()
-
-	// FOLLOW_UP (message code + ID + tMaster)
-	sendMulticast("CODE + ID + " + tMaster.String())
+func syncAndFollowUp(id uint) {
+    protocol.SendSync(id)
+    protocol.SendFollowUp(id)
 }
 
 func main() {
@@ -73,7 +32,7 @@ func main() {
 	go doEvery(protocol.SyncPeriod, syncAndFollowUp)
 
 	// Listen on the UDP port specified in protocol
-	conn, err := net.ListenPacket("udp", protocol.UnicastPort)
+	conn, err := net.ListenPacket("udp", protocol.UnicastListenAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -102,6 +61,6 @@ func main() {
 		tM := time.Now()
 
 		// Send DELAY_RESPONSE
-		sendUnicast("CODE + ID + "+tM.String(), clientAddress)
+		protocol.SendUnicast("CODE + ID + "+tM.String(), clientAddress)
 	}
 }
