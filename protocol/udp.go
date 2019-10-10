@@ -8,6 +8,7 @@ import (
     "os"
 )
 
+// Send message to multicast group
 func sendMulticast(message string) {
     conn, err := net.Dial("udp", MulticastAddress)
     if err != nil {
@@ -18,6 +19,7 @@ func sendMulticast(message string) {
     fmt.Fprintln(conn, message)
 }
 
+// Send message through UDP to specified ip
 func sendUnicast(ip net.Addr, message string) {
     conn, err := net.Dial("udp", ip.String()+UnicastListenAddress)
     if err != nil {

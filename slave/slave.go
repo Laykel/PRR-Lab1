@@ -12,9 +12,30 @@ import (
 )
 
 func main() {
-    // t1 := time.Now()
-    // t2 := time.Now()
-    // diff := t2.Sub(t1)
+    // TODO: Fill in the blanks xD
+    // Listen for messages on multicast group
+
+    // When SYNC message arrives, record time
+    // tI := time.Now()
+
+    // When FOLLOW_UP message arrives, parse master time
+
+    // And calculate offset
+    // offset := tMaster.Sub(tI)
+
+    // Record time and send DELAY_REQUEST to extracted ip address
+    // tEs := time.Now()
+    // protocol.SendDelayRequest(serverAddress)
+
+    // Wait for DELAY_RESPONSE and parse master reception time
+
+    // Then calculate delay
+    // delay := tM.Sub(tEs)
+
+
+
+
+
 
     // Listen for multicast
 	conn, err := net.ListenPacket("udp", protocol.MulticastAddress)

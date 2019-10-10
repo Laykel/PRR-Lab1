@@ -1,3 +1,4 @@
+// TODO: headers
 package main
 
 import (
@@ -9,6 +10,7 @@ import (
     "time"
 )
 
+// TODO: Put that in another package???
 // Call given function every given number of seconds
 func doEvery(seconds uint, f func(uint)) {
 	ticker := time.NewTicker(time.Duration(seconds) * time.Second)
