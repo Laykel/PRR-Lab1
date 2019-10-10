@@ -1,6 +1,7 @@
 package protocol
 
 import (
+    "fmt"
     "io"
     "log"
     "net"
@@ -8,18 +9,16 @@ import (
 )
 
 func sendMulticast(message string) {
-    // TODO: Send bytes and not strings
-
     conn, err := net.Dial("udp", MulticastAddress)
     if err != nil {
         log.Fatal(err)
     }
     defer conn.Close()
 
-    conn.Write([]byte(message))
+    fmt.Fprintln(conn, message)
 }
 
-func SendUnicast(message string, ip net.Addr) {
+func sendUnicast(ip net.Addr, message string) {
     conn, err := net.Dial("udp", ip.String()+UnicastListenAddress)
     if err != nil {
         log.Fatal(err)
@@ -37,4 +36,3 @@ func mustCopy(dst io.Writer, src io.Reader) {
         log.Fatal(err)
     }
 }
-

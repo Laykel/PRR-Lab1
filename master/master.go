@@ -15,7 +15,6 @@ func doEvery(seconds uint, f func(uint)) {
 	defer ticker.Stop()
 
 	var counter uint
-
 	for _ = range ticker.C {
 		f(counter)
 		counter++
@@ -38,13 +37,16 @@ func main() {
 	}
 	defer conn.Close()
 
-	buf := make([]byte, 1024)
+	buf := make([]byte, protocol.MaxBufferSize)
 	for {
 		// Receive DELAY_REQUEST
 		n, clientAddress, err := conn.ReadFrom(buf)
 		if err != nil {
 			log.Fatal(err)
 		}
+
+        // Syscall for time
+        tM := time.Now()
 
 		// TODO: Test whether the DELAY_REQUEST is valid
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
@@ -57,10 +59,7 @@ func main() {
 
         // TODO: If not, continue (go to next loop iteration)
 
-		// Syscall for time
-		tM := time.Now()
-
 		// Send DELAY_RESPONSE
-		protocol.SendUnicast("CODE + ID + "+tM.String(), clientAddress)
+		protocol.SendDelayResponse(clientAddress, tM)
 	}
 }
