@@ -16,6 +16,7 @@ func doEvery(seconds uint, f func(uint)) {
 	ticker := time.NewTicker(time.Duration(seconds) * time.Second)
 	defer ticker.Stop()
 
+	// TODO: make the id go back to 0 when capacity attained
 	var counter uint
 	for _ = range ticker.C {
 		f(counter)

@@ -35,7 +35,7 @@ func SendFollowUp(id uint) {
     tMaster := time.Now()
 
     // Build message and send
-    message := fmt.Sprintf("%d|%d|%s", FollowUp, id, tMaster)
+    message := fmt.Sprintf("%d|%d|%d", FollowUp, id, tMaster.Unix())
     sendMulticast(message)
 }
 
@@ -49,6 +49,6 @@ func SendDelayRequest(ip net.Addr) {
 // Send DELAY_RESPONSE (message code, time of request's reception) message to specified ip
 func SendDelayResponse(ip net.Addr, tM time.Time) {
     // Build message and send
-    message := fmt.Sprintf("%d|%s", DelayResponse, tM)
+    message := fmt.Sprintf("%d|%d", DelayResponse, tM.Unix())
     sendUnicast(ip, message)
 }
