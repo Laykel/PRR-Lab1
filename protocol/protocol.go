@@ -8,10 +8,11 @@ import (
 
 // Networking values
 const (
-	MulticastAddress     = "224.0.0.1:2204"
+	MulticastAddress     = "224.97.6.27:2204"
 	UnicastListenAddress = ":2205"
 	SyncPeriod           = 4 // [s] Period between synchronizations
 	MaxBufferSize        = 256
+    Separator            = '|'
 )
 
 // Message type codes (unsigned bytes for brevity)
@@ -30,10 +31,7 @@ func SendSync(id uint) {
 }
 
 // Send FOLLOW_UP (message code + ID + tMaster) message to multicast group
-func SendFollowUp(id uint) {
-    // Syscall for time
-    tMaster := time.Now()
-
+func SendFollowUp(id uint, tMaster time.Time) {
     // Build message and send
     message := fmt.Sprintf("%d|%d|%d", FollowUp, id, tMaster.Unix())
     sendMulticast(message)

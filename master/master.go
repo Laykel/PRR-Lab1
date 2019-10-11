@@ -7,6 +7,8 @@ import (
     "github.com/Laykel/PRR-Lab1/protocol"
     "log"
     "net"
+    "strconv"
+    "strings"
     "time"
 )
 
@@ -26,7 +28,7 @@ func doEvery(seconds uint, f func(uint)) {
 
 func syncAndFollowUp(id uint) {
     protocol.SendSync(id)
-    protocol.SendFollowUp(id)
+    protocol.SendFollowUp(id, time.Now())
 }
 
 func main() {
@@ -48,21 +50,34 @@ func main() {
 			log.Fatal(err)
 		}
 
-        // Syscall for time
+        // Get time at request reception
         tM := time.Now()
 
-		// TODO: Test whether the DELAY_REQUEST is valid
+		// Read message
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 		for s.Scan() {
-			s := s.Text() + " from " + clientAddress.String() + "\n"
-			if _, err := conn.WriteTo([]byte(s), clientAddress); err != nil {
-				log.Fatal(err)
-			}
+		    // TODO: Put tokens parsing in protocol package?
+		    // Separate message with the separator
+		    tokens := strings.FieldsFunc(s.Text(), func(r rune) bool {
+		        return r == protocol.Separator
+            })
+
+		    // Get the message code
+		    messageCode, err := strconv.ParseUint(tokens[0], 10, 8)
+		    if err != nil {
+		        log.Fatal(err)
+            }
+
+            // If the message received is indeed a DELAY_REQUEST
+		    if uint8(messageCode) == protocol.DelayRequest {
+                s := s.Text() + " from " + clientAddress.String() + "\n"
+                if _, err := conn.WriteTo([]byte(s), clientAddress); err != nil {
+                    log.Fatal(err)
+                }
+
+                // Send DELAY_RESPONSE
+                protocol.SendDelayResponse(clientAddress, tM)
+            }
 		}
-
-        // TODO: If not, continue (go to next loop iteration)
-
-		// Send DELAY_RESPONSE
-		protocol.SendDelayResponse(clientAddress, tM)
 	}
 }
