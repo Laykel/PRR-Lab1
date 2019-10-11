@@ -1,9 +1,9 @@
 package protocol
 
 import (
-    "fmt"
-    "net"
-    "time"
+	"fmt"
+	"net"
+	"time"
 )
 
 // Networking values
@@ -12,7 +12,7 @@ const (
 	UnicastListenAddress = ":2205"
 	SyncPeriod           = 4 // [s] Period between synchronizations
 	MaxBufferSize        = 256
-    Separator            = '|'
+	Separator            = '|'
 )
 
 // Message type codes (unsigned bytes for brevity)
@@ -25,28 +25,28 @@ const (
 
 // Send SYNC (message code + ID) message to multicast group
 func SendSync(id uint) {
-    // Build message and send
-    message := fmt.Sprintf("%d|%d", Sync, id)
-    sendMulticast(message)
+	// Build message and send
+	message := fmt.Sprintf("%d|%d", Sync, id)
+	sendMulticast(message)
 }
 
 // Send FOLLOW_UP (message code + ID + tMaster) message to multicast group
 func SendFollowUp(id uint, tMaster time.Time) {
-    // Build message and send
-    message := fmt.Sprintf("%d|%d|%d", FollowUp, id, tMaster.Unix())
-    sendMulticast(message)
+	// Build message and send
+	message := fmt.Sprintf("%d|%d|%d", FollowUp, id, tMaster.Unix())
+	sendMulticast(message)
 }
 
 // Send DELAY_REQUEST (message code) message to specified ip
 func SendDelayRequest(ip net.Addr) {
-    // Build message and send
-    message := fmt.Sprint(DelayRequest)
-    sendUnicast(ip, message)
+	// Build message and send
+	message := fmt.Sprint(DelayRequest)
+	sendUnicast(ip, message)
 }
 
 // Send DELAY_RESPONSE (message code, time of request's reception) message to specified ip
 func SendDelayResponse(ip net.Addr, tM time.Time) {
-    // Build message and send
-    message := fmt.Sprintf("%d|%d", DelayResponse, tM.Unix())
-    sendUnicast(ip, message)
+	// Build message and send
+	message := fmt.Sprintf("%d|%d", DelayResponse, tM.Unix())
+	sendUnicast(ip, message)
 }
