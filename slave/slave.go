@@ -7,6 +7,7 @@ import (
 	"github.com/Laykel/PRR-Lab1/protocol"
 	"golang.org/x/net/ipv4"
 	"log"
+	"math/rand"
 	"net"
 	"runtime"
 	"strconv"
@@ -82,6 +83,13 @@ func main() {
 					}
 
 					gapI = int64(tMaster) - tI
+
+					rand.Seed(time.Now().UnixNano())
+					timeToWait := rand.Intn(56) + 4
+
+					fmt.Printf("%d secondes\n", timeToWait)
+
+					time.Sleep(time.Duration(timeToWait) * time.Second)
 
 					tES = time.Now().Unix()
 					protocol.SendDelayRequest(addr, idDelayRequest)
