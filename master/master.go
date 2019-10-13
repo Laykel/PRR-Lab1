@@ -2,14 +2,14 @@
 package main
 
 import (
-    "bufio"
-    "bytes"
-    "github.com/Laykel/PRR-Lab1/protocol"
-    "log"
-    "net"
-    "strconv"
-    "strings"
-    "time"
+	"bufio"
+	"bytes"
+	"github.com/Laykel/PRR-Lab1/protocol"
+	"log"
+	"net"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // TODO: Put that in another package???
@@ -18,7 +18,6 @@ func doEvery(seconds uint, f func(uint)) {
 	ticker := time.NewTicker(time.Duration(seconds) * time.Second)
 	defer ticker.Stop()
 
-	// TODO: make the id go back to 0 when capacity attained
 	var counter uint
 	for _ = range ticker.C {
 		f(counter)
@@ -70,13 +69,24 @@ func main() {
 
 			// If the message received is indeed a DELAY_REQUEST
 			if uint8(messageCode) == protocol.DelayRequest {
+
+				tokens := strings.FieldsFunc(s.Text(), func(r rune) bool {
+					return r == protocol.Separator
+				})
+
+				// Get the message code
+				idDelayRequest, err := strconv.ParseUint(tokens[1], 10, 8)
+				if err != nil {
+					log.Fatal(err)
+				}
+
 				s := s.Text() + " from " + clientAddress.String() + "\n"
 				if _, err := conn.WriteTo([]byte(s), clientAddress); err != nil {
 					log.Fatal(err)
 				}
 
 				// Send DELAY_RESPONSE
-				protocol.SendDelayResponse(clientAddress, tM)
+				protocol.SendDelayResponse(clientAddress, tM, uint(idDelayRequest))
 			}
 		}
 	}

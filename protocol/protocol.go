@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+// Tests values
+const (
+	k_const = 5
+)
+
 // Networking values
 const (
 	MulticastAddress     = "224.97.6.27:2204"
