@@ -9,7 +9,7 @@ import (
 )
 
 // Parse message separate by a character
-func parseUdpMessage(s bufio.Scanner) uint64 {
+func ParseUdpMessage(s bufio.Scanner) uint64 {
 	var result uint64
 
 	tokens := strings.FieldsFunc(s.Text(), func(r rune) bool {
