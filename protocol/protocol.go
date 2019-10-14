@@ -43,15 +43,15 @@ func SendFollowUp(id uint, tMaster time.Time) {
 }
 
 // Send DELAY_REQUEST (message code) message to specified ip
-func SendDelayRequest(ip net.Addr) {
+func SendDelayRequest(ip net.Addr, id uint) {
 	// Build message and send
-	message := fmt.Sprint(DelayRequest)
+	message := fmt.Sprintf("%d|%d", DelayRequest, id)
 	sendUnicast(ip, message)
 }
 
 // Send DELAY_RESPONSE (message code, time of request's reception) message to specified ip
-func SendDelayResponse(ip net.Addr, tM time.Time) {
+func SendDelayResponse(ip net.Addr, tM time.Time, id uint) {
 	// Build message and send
-	message := fmt.Sprintf("%d|%d", DelayResponse, tM.Unix())
+	message := fmt.Sprintf("%d|%d|%d", DelayResponse, tM.Unix(), id)
 	sendUnicast(ip, message)
 }
