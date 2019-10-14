@@ -5,10 +5,9 @@ import (
 	"bufio"
 	"bytes"
 	"github.com/Laykel/PRR-Lab1/protocol"
+	"github.com/Laykel/PRR-Lab1/utils"
 	"log"
 	"net"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -55,30 +54,12 @@ func main() {
 		// Read message
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 		for s.Scan() {
-			// TODO: Put tokens parsing in protocol package?
-		// Separate message with the separator
-			tokens := strings.FieldsFunc(s.Text(), func(r rune) bool {
-				return r == protocol.Separator
-			})
-
-			// Get the message code
-			messageCode, err := strconv.ParseUint(tokens[0], 10, 8)
-			if err != nil {
-				log.Fatal(err)
-			}
+			messageCode := utils.ParseUdpMessage(s.Text(), 0)
 
 			// If the message received is indeed a DELAY_REQUEST
 			if uint8(messageCode) == protocol.DelayRequest {
 
-				tokens := strings.FieldsFunc(s.Text(), func(r rune) bool {
-					return r == protocol.Separator
-				})
-
-				// Get the message code
-				idDelayRequest, err := strconv.ParseUint(tokens[1], 10, 8)
-				if err != nil {
-					log.Fatal(err)
-				}
+				idDelayRequest := utils.ParseUdpMessage(s.Text(), 1)
 
 				s := s.Text() + " from " + clientAddress.String() + "\n"
 				if _, err := conn.WriteTo([]byte(s), clientAddress); err != nil {
