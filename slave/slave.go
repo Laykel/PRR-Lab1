@@ -5,13 +5,12 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/Laykel/PRR-Lab1/protocol"
+	"github.com/Laykel/PRR-Lab1/utils"
 	"golang.org/x/net/ipv4"
 	"log"
 	"math/rand"
 	"net"
 	"runtime"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -55,32 +54,14 @@ func main() {
 		for s.Scan() {
 			fmt.Printf("%s from %v\n", s.Text(), addr)
 
-			// Separate message with the separator
-			tokens := strings.FieldsFunc(s.Text(), func(r rune) bool {
-				return r == protocol.Separator
-			})
-
-			// Get the message code
-			messageType, err := strconv.ParseUint(tokens[0], 10, 8)
-			if err != nil {
-				log.Fatal(err)
-			}
+			messageType := utils.ParseUdpMessage(s.Text(), 0)
 
 			switch uint8(messageType) {
 				case protocol.Sync:
 					tI = time.Now().Unix()
 
 				case protocol.FollowUp:
-					// Separate message with the separator
-					tokens := strings.FieldsFunc(s.Text(), func(r rune) bool {
-						return r == protocol.Separator
-					})
-
-					// Get the message code
-					tMaster, err := strconv.ParseUint(tokens[2], 10, 32)
-					if err != nil {
-						log.Fatal(err)
-					}
+					tMaster := utils.ParseUdpMessage(s.Text(), 2)
 
 					gapI = int64(tMaster) - tI
 
@@ -96,21 +77,8 @@ func main() {
 					idDelayRequest++
 
 				case protocol.DelayResponse:
-					// Separate message with the separator
-					tokens := strings.FieldsFunc(s.Text(), func(r rune) bool {
-						return r == protocol.Separator
-					})
-
-					// Get the message code
-					tM, err := strconv.ParseUint(tokens[1], 10, 32)
-					if err != nil {
-						log.Fatal(err)
-					}
-
-					idDelayResponse, err := strconv.ParseUint(tokens[2],10,32)
-					if err != nil {
-						log.Fatal(err)
-					}
+					tM := utils.ParseUdpMessage(s.Text(), 1)
+					idDelayResponse := utils.ParseUdpMessage(s.Text(), 2)
 
 					if uint64(idDelayRequest) != idDelayResponse {
 						log.Fatal("id delayRequest and delayResponse not the same")
