@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/Laykel/PRR-Lab1/protocol"
+    "fmt"
+    "github.com/Laykel/PRR-Lab1/protocol"
 	"github.com/Laykel/PRR-Lab1/utils"
 	"golang.org/x/net/ipv4"
 	"log"
@@ -30,57 +31,88 @@ func main() {
 		interf, _ = net.InterfaceByName("en0")
 	}
 
-	// Listen on multicast
+	// Listen for message on multicast group
 	if err = p.JoinGroup(interf, addr); err != nil {
 		log.Fatal(err)
 	}
 
 	buf := make([]byte, protocol.MaxBufferSize)
 	var tI, offsetI, tES, shiftI int64
-	var idDelayRequest uint
+	var delayRequestId uint8
 
 	for {
 		// SYNC
 		s, addr := protocol.ConnToScanner(connMulticast, buf)
 		s.Scan()
-		utils.Trace(utils.SlaveFilename, "SYNC received with message : "+s.Text())
-		tI = protocol.ReceiveUnicast(s.Text(), protocol.Sync)
+		syncCode, syncId := protocol.SyncDecode(s.Text())
+
+		if syncCode == protocol.Sync {
+			utils.Trace(utils.SlaveFilename, "SYNC received with id: "+strconv.Itoa(int(syncId)))
+
+			// Record slave time
+			tI = time.Now().UnixNano() / int64(time.Microsecond)
+		} else {
+			utils.Trace(utils.SlaveFilename, "First message received was not a SYNC!")
+			continue
+		}
 
 		// FOLLOW_UP
 		s, addr = protocol.ConnToScanner(connMulticast, buf)
 		s.Scan()
-		utils.Trace(utils.SlaveFilename, "FOLLOWUP received with message : "+s.Text())
-		tMaster := protocol.ReceiveUnicast(s.Text(), protocol.FollowUp)
-		offsetI = tMaster - tI
+		followUpCode, followUpId, tMaster := protocol.FollowUpDecode(s.Text())
+
+		if followUpCode == protocol.FollowUp {
+			utils.Trace(utils.SlaveFilename, "FOLLOWUP received with id: "+strconv.Itoa(int(followUpId)))
+
+			if followUpId == syncId {
+				// Calculate offset
+				offsetI = tMaster - tI
+			} else {
+				utils.Trace(utils.SlaveFilename, "FOLLOWUP id is not equal to previous SYNC id!")
+				continue
+			}
+		} else {
+			utils.Trace(utils.SlaveFilename, "No FOLLOWUP message was received!")
+			continue
+		}
 
 		// DELAY_REQUEST
 		rand.Seed(time.Now().UnixNano())
 		// TODO: uncomment that
+		// Wait between 4 and 60 times the sync period
 		//timeToWait := (rand.Intn(56) + 4) * protocol.SyncPeriod
 		timeToWait := 2
 		time.Sleep(time.Duration(timeToWait) * time.Second)
 
+		// Record time
 		tES = time.Now().UnixNano() / int64(time.Microsecond)
 
-		protocol.SendDelayRequest(addr, idDelayRequest)
-        utils.Trace(utils.SlaveFilename, "DelayRequest sent")
+		protocol.SendDelayRequest(addr, delayRequestId)
+		utils.Trace(utils.SlaveFilename, "DelayRequest sent")
 
 		// DELAY_RESPONSE
 		s, addr = protocol.ConnToScanner(connUnicast, buf)
 		s.Scan()
-		utils.Trace(utils.SlaveFilename, "DelayResponse received with message : "+s.Text())
-		tM := protocol.ReceiveUnicast(s.Text(), protocol.DelayResponse)
+        delayResponseCode, delayResponseId, tM := protocol.DelayResponseDecode(s.Text())
 
-		idDelayResponse := utils.ParseUdpMessage(s.Text(), 2, protocol.Separator)
-		if uint64(idDelayRequest) != idDelayResponse {
-			log.Fatal("id delayRequest and delayResponse not the same")
-		}
+        if delayResponseCode == protocol.DelayResponse {
+            utils.Trace(utils.SlaveFilename, "DelayResponse received with id: "+strconv.Itoa(int(delayResponseId)))
 
-		delayI := (tM - tES) / 2
-		shiftI = offsetI + delayI
+            if delayResponseId == delayRequestId {
+                // Calculate delay
+                delayI := (tM - tES) / 2
+                // Calculate shift
+                shiftI = offsetI + delayI
 
-		utils.Trace(utils.SlaveFilename, "Shift_i determined : "+strconv.Itoa(int(shiftI))+" [μs]\n------------------------------------")
-		idDelayRequest++
+                utils.Trace(utils.SlaveFilename, "Shift_i determined: "+strconv.Itoa(int(shiftI))+" [μs]")
+                delayRequestId++
+            } else {
+                utils.Trace(utils.SlaveFilename, "DELAYRESPONSE id is not equal to DELAYREQUEST id!")
+            }
+        } else {
+            utils.Trace(utils.SlaveFilename, "No DELAYRESPONSE was received!")
+        }
 
+        fmt.Println("------------------------------------")
 	}
 }

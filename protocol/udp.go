@@ -1,20 +1,16 @@
 package protocol
 
 import (
-	"bufio"
-	"bytes"
-	"fmt"
-    "github.com/Laykel/PRR-Lab1/utils"
-    "io"
-	"log"
-	"net"
-	"strconv"
-	"strings"
-	"time"
+    "bufio"
+    "bytes"
+    "fmt"
+    "log"
+    "net"
+    "strings"
 )
 
 // Send message to multicast group
-func sendMulticast(message string) {
+func sendMulticast(message *bytes.Buffer) {
 	// Get descriptor
 	conn, err := net.Dial("udp", MulticastAddress)
 	if err != nil {
@@ -22,45 +18,28 @@ func sendMulticast(message string) {
 	}
 	defer conn.Close()
 
-	// Write message
-	_, err = fmt.Fprintln(conn, message)
+	// Send message
+	_, err = fmt.Fprint(conn, message)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 // Send message through UDP to specified ip
-func sendUnicast(ip net.Addr, port string, message string) {
+func sendUnicast(ip net.Addr, port string, message *bytes.Buffer) {
 	tokens := strings.Split(ip.String(), ":")
 
 	conn, err := net.Dial("udp", tokens[0]+port)
-
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
 
-	reader := strings.NewReader(message)
-
-	// Write message
-	if _, err := io.Copy(conn, reader); err != nil {
+	// Send message
+	_, err = fmt.Fprint(conn, message)
+	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-// Receive message through UDP
-func ReceiveUnicast(message string, messageType uint8) int64 {
-	var result int64
-
-	_messageType := utils.ParseUdpMessage(message, 0, Separator)
-
-	if uint8(_messageType) == messageType {
-		result = time.Now().UnixNano() / int64(time.Microsecond)
-	} else {
-		log.Fatal("Message type isn't " + strconv.Itoa(int(messageType)))
-	}
-
-	return result
 }
 
 // Take connection and put its message in a Scanner

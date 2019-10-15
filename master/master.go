@@ -2,31 +2,28 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
-	"github.com/Laykel/PRR-Lab1/protocol"
-	"github.com/Laykel/PRR-Lab1/utils"
-	"log"
-	"net"
-	"time"
+    "github.com/Laykel/PRR-Lab1/protocol"
+    "github.com/Laykel/PRR-Lab1/utils"
+    "strconv"
+    "time"
 )
 
 // Call given function every given number of seconds
-func doEvery(seconds uint, f func(uint)) {
+func doEvery(seconds uint, f func(uint8)) {
 	ticker := time.NewTicker(time.Duration(seconds) * time.Second)
 	defer ticker.Stop()
 
-	var counter uint
+	var counter uint8
 	for _ = range ticker.C {
 		f(counter)
 		counter++
 	}
 }
 
-func syncAndFollowUp(id uint) {
-	protocol.SendSync(id)
+func syncAndFollowUp(id uint8) {
+	protocol.SyncEncode(id)
 	protocol.SendFollowUp(id, time.Now())
-	utils.Trace(utils.MasterFilename, "SYNC and FOLLOWUP sent (multicast)")
+	utils.Trace(utils.MasterFilename, "SYNC and FOLLOW_UP sent (multicast)")
 }
 
 // Main program for master clock
@@ -36,38 +33,28 @@ func main() {
 	go doEvery(protocol.SyncPeriod, syncAndFollowUp)
 
 	// Listen on the UDP port specified in protocol
-	conn, err := net.ListenPacket("udp", protocol.UnicastMasterPort)
-	if err != nil {
-		log.Fatal(err)
-	}
+	conn := protocol.ListenUDPConnection(protocol.UnicastMasterPort)
 	defer conn.Close()
 
 	buf := make([]byte, protocol.MaxBufferSize)
 	for {
 		// Receive DELAY_REQUEST
-		n, clientAddress, err := conn.ReadFrom(buf)
-		if err != nil {
-			log.Fatal(err)
-		}
+        s, addr := protocol.ConnToScanner(conn, buf)
+        s.Scan()
+        delayRequestCode, delayRequestId := protocol.DelayRequestDecode(s.Text())
 
-		// Get time at request reception
-		tM := time.Now()
+        // Get time at request reception
+        tM := time.Now()
 
-		// Read message
-		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
-		for s.Scan() {
-			messageCode := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
+        // If the message received is indeed a DELAY_REQUEST
+        if delayRequestCode == protocol.DelayRequest {
+            utils.Trace(utils.MasterFilename, "DelayRequest received with id: "+strconv.Itoa(int(delayRequestId)))
 
-			// If the message received is indeed a DELAY_REQUEST
-			if uint8(messageCode) == protocol.DelayRequest {
-				idDelayRequest := utils.ParseUdpMessage(s.Text(), 1, protocol.Separator)
-
-				utils.Trace(utils.MasterFilename, "DelayRequest received with message : "+s.Text())
-
-				utils.Trace(utils.MasterFilename, "DelayResponse sent")
-				// Send DELAY_RESPONSE
-				protocol.SendDelayResponse(clientAddress, tM, uint(idDelayRequest))
-			}
-		}
+            // Send DELAY_RESPONSE
+            protocol.SendDelayResponse(addr, delayRequestId, tM)
+            utils.Trace(utils.MasterFilename, "DelayResponse sent")
+		} else {
+            utils.Trace(utils.MasterFilename, "No DELAYREQUEST was received!")
+        }
 	}
 }
