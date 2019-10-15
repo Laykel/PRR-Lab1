@@ -15,6 +15,7 @@ const (
 const (
 	MulticastAddress     = "224.97.6.27:2204"
 	UnicastListenAddress = ":2205"
+	UnicastWriteAddress  = ":2206"
 	SyncPeriod           = 4 // [s] Period between synchronizations
 	MaxBufferSize        = 256
 	Separator            = '|'
@@ -46,12 +47,12 @@ func SendFollowUp(id uint, tMaster time.Time) {
 func SendDelayRequest(ip net.Addr, id uint) {
 	// Build message and send
 	message := fmt.Sprintf("%d|%d", DelayRequest, id)
-	sendUnicast(ip, message)
+	sendUnicast(ip, UnicastListenAddress, message)
 }
 
 // Send DELAY_RESPONSE (message code, time of request's reception) message to specified ip
 func SendDelayResponse(ip net.Addr, tM time.Time, id uint) {
 	// Build message and send
 	message := fmt.Sprintf("%d|%d|%d", DelayResponse, tM.Unix(), id)
-	sendUnicast(ip, message)
+	sendUnicast(ip, UnicastWriteAddress, message)
 }

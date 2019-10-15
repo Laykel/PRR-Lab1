@@ -29,7 +29,6 @@ func main() {
 	}
 	defer connUnicast.Close()
 
-
 	// Get server's ipv4
 	p := ipv4.NewPacketConn(connMulticast)
 	addr, err := net.ResolveUDPAddr("udp", protocol.MulticastAddress)
@@ -81,7 +80,7 @@ func main() {
 		s = bufio.NewScanner(bytes.NewReader(buf[0:n]))
 
 		// FollowUp loop
-		for s.Scan()  {
+		for s.Scan() {
 			fmt.Printf("%s from %v\n", s.Text(), addr)
 
 			messageType := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
@@ -103,7 +102,6 @@ func main() {
 
 				tES = time.Now().Unix()
 				protocol.SendDelayRequest(addr, idDelayRequest)
-				idDelayRequest++
 			}
 		}
 
@@ -138,6 +136,7 @@ func main() {
 				shiftI = offsetI + delayI
 
 				fmt.Printf("The shift of this slave is %d\n", shiftI)
+				idDelayRequest++
 			}
 		}
 	}
