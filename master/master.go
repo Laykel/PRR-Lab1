@@ -4,7 +4,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"github.com/Laykel/PRR-Lab1/protocol"
 	"github.com/Laykel/PRR-Lab1/utils"
 	"log"
@@ -26,6 +25,7 @@ func doEvery(seconds uint, f func(uint)) {
 }
 
 func syncAndFollowUp(id uint) {
+	utils.Trace(utils.MasterFilename, "SYNC and FOLLOWUP sent (multicast)")
 	protocol.SendSync(id)
 	protocol.SendFollowUp(id, time.Now())
 }
@@ -62,13 +62,14 @@ func main() {
 
 				idDelayRequest := utils.ParseUdpMessage(s.Text(), 1, protocol.Separator)
 
-				fmt.Printf("DelayRequest reçu, %s\n", s.Text())
+				utils.Trace(utils.MasterFilename, "DelayRequest received with message : " + s.Text())
 
 				message := s.Text() + " from " + clientAddress.String() + "\n"
 				if _, err := conn.WriteTo([]byte(message), clientAddress); err != nil {
 					log.Fatal(err)
 				}
 
+				utils.Trace(utils.MasterFilename, "DelayResponse sent")
 				// Send DELAY_RESPONSE
 				protocol.SendDelayResponse(clientAddress, tM, uint(idDelayRequest))
 			}

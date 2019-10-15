@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+const (
+	MasterFilename = "master.go"
+	SlaveFilename = "slave.go"
+)
+
 // Return message in a given position from a string separated by a character
 func ParseUdpMessage(s string, position uint, separator rune) uint64 {
 	var result uint64
@@ -21,4 +26,8 @@ func ParseUdpMessage(s string, position uint, separator rune) uint64 {
 	}
 
 	return result
+}
+
+func Trace(filename string, message string) {
+	log.Printf("From %s : %s\n", filename, message)
 }

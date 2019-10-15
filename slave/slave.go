@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"github.com/Laykel/PRR-Lab1/protocol"
 	"github.com/Laykel/PRR-Lab1/utils"
 	"golang.org/x/net/ipv4"
@@ -11,6 +10,7 @@ import (
 	"math/rand"
 	"net"
 	"runtime"
+	"strconv"
 	"time"
 )
 
@@ -60,7 +60,7 @@ func main() {
 
 		// Sync loop
 		for s.Scan() {
-			fmt.Printf("%s from %v\n", s.Text(), addr)
+			utils.Trace(utils.SlaveFilename, "SYNC received with message : " + s.Text())
 
 			messageType := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
 
@@ -77,7 +77,7 @@ func main() {
 
 		// FollowUp loop
 		for s.Scan() {
-			fmt.Printf("%s from %v\n", s.Text(), addr)
+			utils.Trace(utils.SlaveFilename, "FOLLOWUP received with message : " + s.Text())
 
 			messageType := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
 
@@ -86,17 +86,15 @@ func main() {
 
 				offsetI = int64(tMaster) - tI
 
-				fmt.Printf("offsetI : %d\n", offsetI)
-
 				rand.Seed(time.Now().UnixNano())
 				//timeToWait := rand.Intn(56) + 4
 				timeToWait := 2
 
-				fmt.Printf("%d secondes\n", timeToWait)
-
 				time.Sleep(time.Duration(timeToWait) * time.Second)
 
 				tES = time.Now().UnixNano() / int64(time.Microsecond)
+
+				utils.Trace(utils.SlaveFilename, "DelayRequest sent")
 				protocol.SendDelayRequest(addr, idDelayRequest)
 			}
 		}
@@ -110,7 +108,8 @@ func main() {
 
 		// DelayResponse loop
 		for s.Scan() {
-			fmt.Printf("%s from %v\n", s.Text(), addr)
+
+			utils.Trace(utils.SlaveFilename, "DelayResponse received with message : " + s.Text())
 
 			messageType := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
 
@@ -125,11 +124,9 @@ func main() {
 
 				delayI := (int64(tM) - tES) / 2
 
-				fmt.Printf("delayI %d\n", delayI)
-
 				shiftI = offsetI + delayI
 
-				fmt.Printf("The shift of this slave is %d\n", shiftI)
+				utils.Trace(utils.SlaveFilename, "Shift_i determined : " + strconv.Itoa(int(shiftI)) + " [μs]\n------------------------------------")
 				idDelayRequest++
 			}
 		}
