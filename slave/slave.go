@@ -56,7 +56,7 @@ func main() {
 
 		// DELAY_REQUEST
 		rand.Seed(time.Now().UnixNano())
-		//timeToWait := rand.Intn(56) + 4
+		//timeToWait := (rand.Intn(56) + 4) * protocol.SyncPeriod
 		timeToWait := 2
 		time.Sleep(time.Duration(timeToWait) * time.Second)
 
