@@ -29,7 +29,6 @@ func main() {
 	}
 	defer connUnicast.Close()
 
-
 	// Get server's ipv4
 	p := ipv4.NewPacketConn(connMulticast)
 	addr, err := net.ResolveUDPAddr("udp", protocol.MulticastAddress)
@@ -57,8 +56,6 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("Exterieur de la boucle s.Scan()\n")
-
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 
 		// Sync loop
@@ -76,12 +73,10 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("Entre Sync et FollowUp\n")
-
 		s = bufio.NewScanner(bytes.NewReader(buf[0:n]))
 
 		// FollowUp loop
-		for s.Scan()  {
+		for s.Scan() {
 			fmt.Printf("%s from %v\n", s.Text(), addr)
 
 			messageType := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
@@ -103,7 +98,6 @@ func main() {
 
 				tES = time.Now().Unix()
 				protocol.SendDelayRequest(addr, idDelayRequest)
-				idDelayRequest++
 			}
 		}
 
@@ -111,8 +105,6 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Printf("Entre FollowUp et DelayResponse\n")
 
 		s = bufio.NewScanner(bytes.NewReader(buf[0:n]))
 
@@ -138,6 +130,7 @@ func main() {
 				shiftI = offsetI + delayI
 
 				fmt.Printf("The shift of this slave is %d\n", shiftI)
+				idDelayRequest++
 			}
 		}
 	}

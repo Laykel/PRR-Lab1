@@ -35,7 +35,7 @@ func main() {
 	go doEvery(protocol.SyncPeriod, syncAndFollowUp)
 
 	// Listen on the UDP port specified in protocol
-	conn, err := net.ListenPacket("udp", protocol.UnicastPort)
+	conn, err := net.ListenPacket("udp", protocol.UnicastMasterPort)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,13 +60,12 @@ func main() {
 			// If the message received is indeed a DELAY_REQUEST
 			if uint8(messageCode) == protocol.DelayRequest {
 
-
 				idDelayRequest := utils.ParseUdpMessage(s.Text(), 1, protocol.Separator)
 
 				fmt.Printf("DelayRequest reçu, %s\n", s.Text())
 
-				s := s.Text() + " from " + clientAddress.String() + "\n"
-				if _, err := conn.WriteTo([]byte(s), clientAddress); err != nil {
+				message := s.Text() + " from " + clientAddress.String() + "\n"
+				if _, err := conn.WriteTo([]byte(message), clientAddress); err != nil {
 					log.Fatal(err)
 				}
 

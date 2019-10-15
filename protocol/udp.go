@@ -10,7 +10,7 @@ import (
 
 // Send message to multicast group
 func sendMulticast(message string) {
-    // Get descriptor
+	// Get descriptor
 	conn, err := net.Dial("udp", MulticastAddress)
 	if err != nil {
 		log.Fatal(err)
@@ -18,20 +18,21 @@ func sendMulticast(message string) {
 	defer conn.Close()
 
 	// Write message
-    _, err = fmt.Fprintln(conn, message)
+	_, err = fmt.Fprintln(conn, message)
 	if err != nil {
-	    log.Fatal(err)
-    }
+		log.Fatal(err)
+	}
 }
 
 // Send message through UDP to specified ip
-func sendUnicast(ip net.Addr, message string) {
-    // Get descriptor
+func sendUnicast(ip net.Addr, port string, message string) {
+	// Get descriptor
 	tokens := strings.FieldsFunc(ip.String(), func(r rune) bool {
 		return r == ':'
 	})
 
-	conn, err := net.Dial("udp", tokens[0]+UnicastPort)
+	conn, err := net.Dial("udp", tokens[0]+port)
+
 	if err != nil {
 		log.Fatal(err)
 	}
