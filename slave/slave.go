@@ -16,14 +16,22 @@ import (
 
 func main() {
 	// Listen for multicast
-	conn, err := net.ListenPacket("udp", protocol.MulticastAddress)
+	connMulticast, err := net.ListenPacket("udp", protocol.MulticastAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close()
+	defer connMulticast.Close()
+
+	// Listen for unicast
+	connUnicast, err := net.ListenPacket("udp", ":2206")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer connUnicast.Close()
+
 
 	// Get server's ipv4
-	p := ipv4.NewPacketConn(conn)
+	p := ipv4.NewPacketConn(connMulticast)
 	addr, err := net.ResolveUDPAddr("udp", protocol.MulticastAddress)
 	if err != nil {
 		log.Fatal(err)
@@ -40,55 +48,96 @@ func main() {
 	}
 
 	buf := make([]byte, protocol.MaxBufferSize)
-	var tI, gapI, tES, shiftI int64
+	var tI, offsetI, tES, shiftI int64
 	var idDelayRequest uint
 
 	for {
-		n, addr, err := conn.ReadFrom(buf)
+		n, addr, err := connMulticast.ReadFrom(buf)
 		if err != nil {
 			log.Fatal(err)
 		}
 
+		fmt.Printf("Exterieur de la boucle s.Scan()\n")
+
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 
+		// Sync loop
 		for s.Scan() {
 			fmt.Printf("%s from %v\n", s.Text(), addr)
 
-			messageType := utils.ParseUdpMessage(s.Text(), 0)
+			messageType := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
 
-			switch uint8(messageType) {
-				case protocol.Sync:
-					tI = time.Now().Unix()
+			if uint8(messageType) == protocol.Sync {
+				tI = time.Now().Unix()
+			}
+		}
+		n, addr, err = connMulticast.ReadFrom(buf)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-				case protocol.FollowUp:
-					tMaster := utils.ParseUdpMessage(s.Text(), 2)
+		fmt.Printf("Entre Sync et FollowUp\n")
 
-					gapI = int64(tMaster) - tI
+		s = bufio.NewScanner(bytes.NewReader(buf[0:n]))
 
-					rand.Seed(time.Now().UnixNano())
-					timeToWait := rand.Intn(56) + 4
+		// FollowUp loop
+		for s.Scan()  {
+			fmt.Printf("%s from %v\n", s.Text(), addr)
 
-					fmt.Printf("%d secondes\n", timeToWait)
+			messageType := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
 
-					time.Sleep(time.Duration(timeToWait) * time.Second)
+			if uint8(messageType) == protocol.FollowUp {
+				tMaster := utils.ParseUdpMessage(s.Text(), 2, protocol.Separator)
 
-					tES = time.Now().Unix()
-					protocol.SendDelayRequest(addr, idDelayRequest)
-					idDelayRequest++
+				offsetI = int64(tMaster) - tI
 
-				case protocol.DelayResponse:
-					tM := utils.ParseUdpMessage(s.Text(), 1)
-					idDelayResponse := utils.ParseUdpMessage(s.Text(), 2)
+				fmt.Printf("offsetI : %d\n", offsetI)
 
-					if uint64(idDelayRequest) != idDelayResponse {
-						log.Fatal("id delayRequest and delayResponse not the same")
-					}
+				rand.Seed(time.Now().UnixNano())
+				//timeToWait := rand.Intn(56) + 4
+				timeToWait := 2
 
-					noticeI := (int64(tM) - tES) / 2
+				fmt.Printf("%d secondes\n", timeToWait)
 
-					shiftI = gapI + noticeI
+				time.Sleep(time.Duration(timeToWait) * time.Second)
 
-					fmt.Printf("The shift of this slave is %d\n", shiftI)
+				tES = time.Now().Unix()
+				protocol.SendDelayRequest(addr, idDelayRequest)
+				idDelayRequest++
+			}
+		}
+
+		n, addr, err = connUnicast.ReadFrom(buf)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("Entre FollowUp et DelayResponse\n")
+
+		s = bufio.NewScanner(bytes.NewReader(buf[0:n]))
+
+		// DelayResponse loop
+		for s.Scan() {
+			fmt.Printf("%s from %v\n", s.Text(), addr)
+
+			messageType := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
+
+			if uint8(messageType) == protocol.DelayResponse {
+
+				tM := utils.ParseUdpMessage(s.Text(), 1, protocol.Separator)
+				idDelayResponse := utils.ParseUdpMessage(s.Text(), 2, protocol.Separator)
+
+				if uint64(idDelayRequest) != idDelayResponse {
+					log.Fatal("id delayRequest and delayResponse not the same")
+				}
+
+				delayI := (int64(tM) - tES) / 2
+
+				fmt.Printf("delayI %d\n", delayI)
+
+				shiftI = offsetI + delayI
+
+				fmt.Printf("The shift of this slave is %d\n", shiftI)
 			}
 		}
 	}
