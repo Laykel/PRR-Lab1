@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/Laykel/PRR-Lab1/utils"
-	"io"
+    "github.com/Laykel/PRR-Lab1/utils"
+    "io"
 	"log"
 	"net"
 	"strconv"
@@ -31,10 +31,7 @@ func sendMulticast(message string) {
 
 // Send message through UDP to specified ip
 func sendUnicast(ip net.Addr, port string, message string) {
-	// Get descriptor
-	tokens := strings.FieldsFunc(ip.String(), func(r rune) bool {
-		return r == ':'
-	})
+	tokens := strings.Split(ip.String(), ":")
 
 	conn, err := net.Dial("udp", tokens[0]+port)
 
@@ -52,7 +49,7 @@ func sendUnicast(ip net.Addr, port string, message string) {
 }
 
 // Receive message through UDP
-func ReceiveUnicast(message string, messageType uint8) (int64) {
+func ReceiveUnicast(message string, messageType uint8) int64 {
 	var result int64
 
 	_messageType := utils.ParseUdpMessage(message, 0, Separator)
@@ -68,7 +65,6 @@ func ReceiveUnicast(message string, messageType uint8) (int64) {
 
 // Take connection and put its message in a Scanner
 func ConnToScanner(conn net.PacketConn, buffer []byte) (s *bufio.Scanner, addr net.Addr) {
-
 	n, addr, err := conn.ReadFrom(buffer)
 	if err != nil {
 		log.Fatal(err)
@@ -79,14 +75,13 @@ func ConnToScanner(conn net.PacketConn, buffer []byte) (s *bufio.Scanner, addr n
 	return
 }
 
-// Listen an UDP connection specified by an address
+// Listen a UDP connection specified by an address
 func ListenUDPConnection(address string) net.PacketConn {
 	result, err := net.ListenPacket("udp", address)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-
 
 	return result
 }

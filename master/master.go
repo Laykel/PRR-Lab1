@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-// TODO: Put that in another package???
 // Call given function every given number of seconds
 func doEvery(seconds uint, f func(uint)) {
 	ticker := time.NewTicker(time.Duration(seconds) * time.Second)
@@ -25,13 +24,15 @@ func doEvery(seconds uint, f func(uint)) {
 }
 
 func syncAndFollowUp(id uint) {
-	utils.Trace(utils.MasterFilename, "SYNC and FOLLOWUP sent (multicast)")
 	protocol.SendSync(id)
 	protocol.SendFollowUp(id, time.Now())
+	utils.Trace(utils.MasterFilename, "SYNC and FOLLOWUP sent (multicast)")
 }
 
+// Main program for master clock
+// Periodically syncs and responds to DELAY_REQUEST
 func main() {
-	// Periodically broadcast
+	// Periodically sync
 	go doEvery(protocol.SyncPeriod, syncAndFollowUp)
 
 	// Listen on the UDP port specified in protocol
@@ -59,10 +60,9 @@ func main() {
 
 			// If the message received is indeed a DELAY_REQUEST
 			if uint8(messageCode) == protocol.DelayRequest {
-
 				idDelayRequest := utils.ParseUdpMessage(s.Text(), 1, protocol.Separator)
 
-				utils.Trace(utils.MasterFilename, "DelayRequest received with message : " + s.Text())
+				utils.Trace(utils.MasterFilename, "DelayRequest received with message : "+s.Text())
 
 				utils.Trace(utils.MasterFilename, "DelayResponse sent")
 				// Send DELAY_RESPONSE

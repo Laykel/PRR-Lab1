@@ -1,14 +1,9 @@
 package protocol
 
 import (
-	"fmt"
-	"net"
-	"time"
-)
-
-// Tests values
-const (
-	k_const = 5
+    "fmt"
+    "net"
+    "time"
 )
 
 // Networking values
@@ -18,7 +13,7 @@ const (
 	UnicastSlavePort  = ":2206"
 	SyncPeriod        = 4 // [s] Period between synchronizations
 	MaxBufferSize     = 256
-	Separator         = '|'
+	Separator         = "|"
 )
 
 // Message type codes (unsigned bytes for brevity)
@@ -56,3 +51,4 @@ func SendDelayResponse(ip net.Addr, tM time.Time, id uint) {
 	message := fmt.Sprintf("%d|%d|%d", DelayResponse, tM.UnixNano()/int64(time.Microsecond), id)
 	sendUnicast(ip, UnicastSlavePort, message)
 }
+

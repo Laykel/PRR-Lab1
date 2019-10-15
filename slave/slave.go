@@ -15,7 +15,7 @@ import (
 func main() {
 	connMulticast := protocol.ListenUDPConnection(protocol.MulticastAddress)
 	defer connMulticast.Close()
-	connUnicast   := protocol.ListenUDPConnection(protocol.UnicastSlavePort)
+	connUnicast := protocol.ListenUDPConnection(protocol.UnicastSlavePort)
 	defer connUnicast.Close()
 
 	// Get server's ipv4
@@ -46,7 +46,6 @@ func main() {
 		utils.Trace(utils.SlaveFilename, "SYNC received with message : "+s.Text())
 		tI = protocol.ReceiveUnicast(s.Text(), protocol.Sync)
 
-
 		// FOLLOW_UP
 		s, addr = protocol.ConnToScanner(connMulticast, buf)
 		s.Scan()
@@ -56,14 +55,15 @@ func main() {
 
 		// DELAY_REQUEST
 		rand.Seed(time.Now().UnixNano())
+		// TODO: uncomment that
 		//timeToWait := (rand.Intn(56) + 4) * protocol.SyncPeriod
 		timeToWait := 2
 		time.Sleep(time.Duration(timeToWait) * time.Second)
 
 		tES = time.Now().UnixNano() / int64(time.Microsecond)
 
-		utils.Trace(utils.SlaveFilename, "DelayRequest sent")
 		protocol.SendDelayRequest(addr, idDelayRequest)
+        utils.Trace(utils.SlaveFilename, "DelayRequest sent")
 
 		// DELAY_RESPONSE
 		s, addr = protocol.ConnToScanner(connUnicast, buf)
@@ -75,7 +75,6 @@ func main() {
 		if uint64(idDelayRequest) != idDelayResponse {
 			log.Fatal("id delayRequest and delayResponse not the same")
 		}
-
 
 		delayI := (tM - tES) / 2
 		shiftI = offsetI + delayI
