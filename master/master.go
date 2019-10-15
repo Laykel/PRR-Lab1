@@ -4,6 +4,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"github.com/Laykel/PRR-Lab1/protocol"
 	"github.com/Laykel/PRR-Lab1/utils"
 	"log"
@@ -54,12 +55,15 @@ func main() {
 		// Read message
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 		for s.Scan() {
-			messageCode := utils.ParseUdpMessage(s.Text(), 0)
+			messageCode := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
 
 			// If the message received is indeed a DELAY_REQUEST
 			if uint8(messageCode) == protocol.DelayRequest {
 
-				idDelayRequest := utils.ParseUdpMessage(s.Text(), 1)
+
+				idDelayRequest := utils.ParseUdpMessage(s.Text(), 1, protocol.Separator)
+
+				fmt.Printf("DelayRequest reçu, %s\n", s.Text())
 
 				s := s.Text() + " from " + clientAddress.String() + "\n"
 				if _, err := conn.WriteTo([]byte(s), clientAddress); err != nil {
