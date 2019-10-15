@@ -31,9 +31,7 @@ func sendUnicast(ip net.Addr, message string) {
 		return r == ':'
 	})
 
-	conn, err := net.Dial("udp", tokens[0]+UnicastListenAddress)
-
-
+	conn, err := net.Dial("udp", tokens[0]+UnicastPort)
 	if err != nil {
 		log.Fatal(err)
 	}

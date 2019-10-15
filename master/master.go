@@ -35,7 +35,7 @@ func main() {
 	go doEvery(protocol.SyncPeriod, syncAndFollowUp)
 
 	// Listen on the UDP port specified in protocol
-	conn, err := net.ListenPacket("udp", protocol.UnicastListenAddress)
+	conn, err := net.ListenPacket("udp", protocol.UnicastPort)
 	if err != nil {
 		log.Fatal(err)
 	}

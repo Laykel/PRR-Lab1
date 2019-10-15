@@ -13,11 +13,11 @@ const (
 
 // Networking values
 const (
-	MulticastAddress     = "224.97.6.27:2204"
-	UnicastListenAddress = ":2205"
-	SyncPeriod           = 4 // [s] Period between synchronizations
-	MaxBufferSize        = 256
-	Separator            = '|'
+	MulticastAddress = "224.97.6.27:2204"
+	UnicastPort      = ":2205"
+	SyncPeriod       = 4 // [s] Period between synchronizations
+	MaxBufferSize    = 256
+	Separator        = '|'
 )
 
 // Message type codes (unsigned bytes for brevity)
