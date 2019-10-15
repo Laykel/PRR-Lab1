@@ -1,23 +1,22 @@
 package utils
 
 import (
-	"bufio"
 	"github.com/Laykel/PRR-Lab1/protocol"
 	"log"
 	"strconv"
 	"strings"
 )
 
-// Parse message separate by a character
-func ParseUdpMessage(s bufio.Scanner) uint64 {
+// Return message in a given position from a string separated by a character
+func ParseUdpMessage(s string, position uint) uint64 {
 	var result uint64
 
-	tokens := strings.FieldsFunc(s.Text(), func(r rune) bool {
+	tokens := strings.FieldsFunc(s, func(r rune) bool {
 		return r == protocol.Separator
 	})
 
 	// Get the message code
-	result, err := strconv.ParseUint(tokens[1], 10, 64)
+	result, err := strconv.ParseUint(tokens[position], 10, 64)
 	if err != nil {
 		log.Fatal(err)
 	}
