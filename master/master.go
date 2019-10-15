@@ -64,11 +64,6 @@ func main() {
 
 				utils.Trace(utils.MasterFilename, "DelayRequest received with message : " + s.Text())
 
-				/*message := s.Text() + " from " + clientAddress.String() + "\n"
-				if _, err := conn.WriteTo([]byte(message), clientAddress); err != nil {
-					log.Fatal(err)
-				}*/
-
 				utils.Trace(utils.MasterFilename, "DelayResponse sent")
 				// Send DELAY_RESPONSE
 				protocol.SendDelayResponse(clientAddress, tM, uint(idDelayRequest))
