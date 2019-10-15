@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"github.com/Laykel/PRR-Lab1/protocol"
 	"github.com/Laykel/PRR-Lab1/utils"
 	"golang.org/x/net/ipv4"
@@ -15,18 +13,9 @@ import (
 )
 
 func main() {
-	// Listen for multicast
-	connMulticast, err := net.ListenPacket("udp", protocol.MulticastAddress)
-	if err != nil {
-		log.Fatal(err)
-	}
+	connMulticast := protocol.ListenUDPConnection(protocol.MulticastAddress)
 	defer connMulticast.Close()
-
-	// Listen for unicast
-	connUnicast, err := net.ListenPacket("udp", ":2206")
-	if err != nil {
-		log.Fatal(err)
-	}
+	connUnicast   := protocol.ListenUDPConnection(protocol.UnicastSlavePort)
 	defer connUnicast.Close()
 
 	// Get server's ipv4
@@ -51,84 +40,48 @@ func main() {
 	var idDelayRequest uint
 
 	for {
-		n, addr, err := connMulticast.ReadFrom(buf)
-		if err != nil {
-			log.Fatal(err)
+		// SYNC
+		s, addr := protocol.ConnToScanner(connMulticast, buf)
+		s.Scan()
+		utils.Trace(utils.SlaveFilename, "SYNC received with message : "+s.Text())
+		tI = protocol.ReceiveUnicast(s.Text(), protocol.Sync)
+
+
+		// FOLLOW_UP
+		s, addr = protocol.ConnToScanner(connMulticast, buf)
+		s.Scan()
+		utils.Trace(utils.SlaveFilename, "FOLLOWUP received with message : "+s.Text())
+		tMaster := protocol.ReceiveUnicast(s.Text(), protocol.FollowUp)
+		offsetI = tMaster - tI
+
+		// DELAY_REQUEST
+		rand.Seed(time.Now().UnixNano())
+		//timeToWait := rand.Intn(56) + 4
+		timeToWait := 2
+		time.Sleep(time.Duration(timeToWait) * time.Second)
+
+		tES = time.Now().UnixNano() / int64(time.Microsecond)
+
+		utils.Trace(utils.SlaveFilename, "DelayRequest sent")
+		protocol.SendDelayRequest(addr, idDelayRequest)
+
+		// DELAY_RESPONSE
+		s, addr = protocol.ConnToScanner(connUnicast, buf)
+		s.Scan()
+		utils.Trace(utils.SlaveFilename, "DelayResponse received with message : "+s.Text())
+		tM := protocol.ReceiveUnicast(s.Text(), protocol.DelayResponse)
+
+		idDelayResponse := utils.ParseUdpMessage(s.Text(), 2, protocol.Separator)
+		if uint64(idDelayRequest) != idDelayResponse {
+			log.Fatal("id delayRequest and delayResponse not the same")
 		}
 
-		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 
-		// Sync loop
-		for s.Scan() {
-			utils.Trace(utils.SlaveFilename, "SYNC received with message : " + s.Text())
+		delayI := (tM - tES) / 2
+		shiftI = offsetI + delayI
 
-			messageType := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
+		utils.Trace(utils.SlaveFilename, "Shift_i determined : "+strconv.Itoa(int(shiftI))+" [μs]\n------------------------------------")
+		idDelayRequest++
 
-			if uint8(messageType) == protocol.Sync {
-				tI = time.Now().UnixNano() / int64(time.Microsecond)
-			}
-		}
-		n, addr, err = connMulticast.ReadFrom(buf)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		s = bufio.NewScanner(bytes.NewReader(buf[0:n]))
-
-		// FollowUp loop
-		for s.Scan() {
-			utils.Trace(utils.SlaveFilename, "FOLLOWUP received with message : " + s.Text())
-
-			messageType := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
-
-			if uint8(messageType) == protocol.FollowUp {
-				tMaster := utils.ParseUdpMessage(s.Text(), 2, protocol.Separator)
-
-				offsetI = int64(tMaster) - tI
-
-				rand.Seed(time.Now().UnixNano())
-				//timeToWait := rand.Intn(56) + 4
-				timeToWait := 2
-
-				time.Sleep(time.Duration(timeToWait) * time.Second)
-
-				tES = time.Now().UnixNano() / int64(time.Microsecond)
-
-				utils.Trace(utils.SlaveFilename, "DelayRequest sent")
-				protocol.SendDelayRequest(addr, idDelayRequest)
-			}
-		}
-
-		n, addr, err = connUnicast.ReadFrom(buf)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		s = bufio.NewScanner(bytes.NewReader(buf[0:n]))
-
-		// DelayResponse loop
-		for s.Scan() {
-
-			utils.Trace(utils.SlaveFilename, "DelayResponse received with message : " + s.Text())
-
-			messageType := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
-
-			if uint8(messageType) == protocol.DelayResponse {
-
-				tM := utils.ParseUdpMessage(s.Text(), 1, protocol.Separator)
-				idDelayResponse := utils.ParseUdpMessage(s.Text(), 2, protocol.Separator)
-
-				if uint64(idDelayRequest) != idDelayResponse {
-					log.Fatal("id delayRequest and delayResponse not the same")
-				}
-
-				delayI := (int64(tM) - tES) / 2
-
-				shiftI = offsetI + delayI
-
-				utils.Trace(utils.SlaveFilename, "Shift_i determined : " + strconv.Itoa(int(shiftI)) + " [μs]\n------------------------------------")
-				idDelayRequest++
-			}
-		}
 	}
 }
