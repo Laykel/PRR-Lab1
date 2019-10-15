@@ -5,7 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
-	"os"
+	"strings"
 )
 
 // Send message to multicast group
@@ -27,21 +27,22 @@ func sendMulticast(message string) {
 // Send message through UDP to specified ip
 func sendUnicast(ip net.Addr, message string) {
     // Get descriptor
-	conn, err := net.Dial("udp", ip.String()+UnicastListenAddress)
+	tokens := strings.FieldsFunc(ip.String(), func(r rune) bool {
+		return r == ':'
+	})
+
+	conn, err := net.Dial("udp", tokens[0]+UnicastListenAddress)
+
+
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
 
-	// Write message
-	go func() {
-		mustCopy(os.Stdout, conn)
-	}()
-	mustCopy(conn, os.Stdin)
-}
+	reader := strings.NewReader(message)
 
-func mustCopy(dst io.Writer, src io.Reader) {
-	if _, err := io.Copy(dst, src); err != nil {
+	// Write message
+	if _, err := io.Copy(conn, reader); err != nil {
 		log.Fatal(err)
 	}
 }
