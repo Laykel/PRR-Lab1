@@ -39,7 +39,7 @@ func SendSync(id uint) {
 // Send FOLLOW_UP (message code + ID + tMaster) message to multicast group
 func SendFollowUp(id uint, tMaster time.Time) {
 	// Build message and send
-	message := fmt.Sprintf("%d|%d|%d", FollowUp, id, tMaster.Unix())
+	message := fmt.Sprintf("%d|%d|%d", FollowUp, id, tMaster.UnixNano()/int64(time.Microsecond))
 	sendMulticast(message)
 }
 
@@ -53,6 +53,6 @@ func SendDelayRequest(ip net.Addr, id uint) {
 // Send DELAY_RESPONSE (message code, time of request's reception) message to specified ip
 func SendDelayResponse(ip net.Addr, tM time.Time, id uint) {
 	// Build message and send
-	message := fmt.Sprintf("%d|%d|%d", DelayResponse, tM.Unix(), id)
+	message := fmt.Sprintf("%d|%d|%d", DelayResponse, tM.UnixNano()/int64(time.Microsecond), id)
 	sendUnicast(ip, UnicastSlavePort, message)
 }

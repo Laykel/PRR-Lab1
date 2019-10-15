@@ -65,7 +65,7 @@ func main() {
 			messageType := utils.ParseUdpMessage(s.Text(), 0, protocol.Separator)
 
 			if uint8(messageType) == protocol.Sync {
-				tI = time.Now().Unix()
+				tI = time.Now().UnixNano() / int64(time.Microsecond)
 			}
 		}
 		n, addr, err = connMulticast.ReadFrom(buf)
@@ -96,7 +96,7 @@ func main() {
 
 				time.Sleep(time.Duration(timeToWait) * time.Second)
 
-				tES = time.Now().Unix()
+				tES = time.Now().UnixNano() / int64(time.Microsecond)
 				protocol.SendDelayRequest(addr, idDelayRequest)
 			}
 		}
