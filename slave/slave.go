@@ -8,8 +8,8 @@
 package main
 
 import (
-    "fmt"
-    "github.com/Laykel/PRR-Lab1/protocol"
+	"fmt"
+	"github.com/Laykel/PRR-Lab1/protocol"
 	"github.com/Laykel/PRR-Lab1/utils"
 	"golang.org/x/net/ipv4"
 	"log"
@@ -43,11 +43,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	buf := make([]byte, protocol.MaxBufferSize)
+
 	var tI, offsetI, tES, shiftI int64
 	var delayRequestId uint8
 
 	for {
+		buf := make([]byte, protocol.MaxBufferSize)
 		// SYNC
 		s, addr := protocol.ConnToScanner(connMulticast, buf)
 		s.Scan()
@@ -62,6 +63,7 @@ func main() {
 			utils.Trace(utils.SlaveFilename, "First message received was not a SYNC!")
 			continue
 		}
+
 
 		// FOLLOW_UP
 		s, addr = protocol.ConnToScanner(connMulticast, buf)
@@ -87,7 +89,7 @@ func main() {
 		rand.Seed(time.Now().UnixNano())
 		// Wait between 4 and 60 times the sync period
 		//timeToWait := (rand.Intn(56) + 4) * protocol.SyncPeriod
-		timeToWait := 2
+		timeToWait := 6
         utils.Trace(utils.SlaveFilename, "Waiting "+strconv.Itoa(timeToWait)+" [s] before DELAYREQUEST")
 		time.Sleep(time.Duration(timeToWait) * time.Second)
 
@@ -122,5 +124,30 @@ func main() {
         }
 
         fmt.Println("------------------------------------")
+
+        s = nil
+        buf = nil
+
+        connMulticast.Close()
+        connUnicast.Close()
+		connMulticast = protocol.ListenUDPConnection(protocol.MulticastAddress)
+		connUnicast = protocol.ListenUDPConnection(protocol.UnicastSlavePort)
+
+		// Get server's ipv4
+		p := ipv4.NewPacketConn(connMulticast)
+		addr, err := net.ResolveUDPAddr("udp", protocol.MulticastAddress)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var interf *net.Interface
+		if runtime.GOOS == "darwin" {
+			interf, _ = net.InterfaceByName("en0")
+		}
+
+		// Join multicast group
+		if err = p.JoinGroup(interf, addr); err != nil {
+			log.Fatal(err)
+		}
 	}
 }

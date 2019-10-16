@@ -30,7 +30,7 @@ func syncAndFollowUp(id uint8) {
     tMaster := time.Now()
 	protocol.SendSync(id)
 	protocol.SendFollowUp(id, tMaster)
-	utils.Trace(utils.MasterFilename, "SYNC and FOLLOW_UP sent (multicast)")
+	utils.Trace(utils.MasterFilename, "SYNC and FOLLOW_UP sent (multicast) id : " + strconv.Itoa(int(id)))
 }
 
 // Main program for master clock
