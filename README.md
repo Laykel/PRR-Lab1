@@ -46,6 +46,18 @@ pour voir la sortie des programmes.
 
 ## Fonctionnement
 
+### Maître
+
+Le maître envoie des messages de type SYNC et FOLLOW_UP à intervalles réguliers (toutes les 2 secondes), cela en mode multicast (avec UDP). Le message SYNC envoie un ID, alors que le FOLLOW_UP envoie un ID et un temps tMaster. En plus de cette tâche, il attend des messages de type DELAY_REQUEST que sont censés lui envoyer les esclaves. Lorsqu'il reçoit un message DELAY_REQUEST, il répond à l'esclave en question avec un message de type DELAY_RESPONSE contenant un ID, et un temps tM.
+
+### Esclave(s)
+
+Les esclaves écoutent les messages multicast envoyé par le maître. Une fois qu'ils ont reçu un SYNC, ils suivent ensuite une séquence SYNC-FOLLOW_UP-DELAY_REQUEST-DELAY_RESPONSE. Avec les paramètres de ces messages, ils déterminent leur propre décalage.
+
+### Divers
+
+Les temps envoyés et traités sont des timestamps en microsecondes.
+
 ## Problèmes connus
 
 - Dans le slave, pas de timeout lors de l'attente de DELAY_RESPONSE.
