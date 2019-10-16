@@ -27,8 +27,9 @@ func doEvery(seconds uint, f func(uint8)) {
 }
 
 func syncAndFollowUp(id uint8) {
-	protocol.SyncEncode(id)
-	protocol.SendFollowUp(id, time.Now())
+    tMaster := time.Now()
+	protocol.SendSync(id)
+	protocol.SendFollowUp(id, tMaster)
 	utils.Trace(utils.MasterFilename, "SYNC and FOLLOW_UP sent (multicast)")
 }
 

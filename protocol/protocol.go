@@ -21,7 +21,7 @@ const (
 	MulticastAddress  = "224.97.6.27:2204"
 	UnicastMasterPort = ":2205"
 	UnicastSlavePort  = ":2206"
-	SyncPeriod        = 2 // [s] Period between synchronizations
+	SyncPeriod        = 4 // [s] Period between synchronizations
 	MaxBufferSize     = 32
 )
 
@@ -68,7 +68,7 @@ func encode(message interface{}) *bytes.Buffer {
 }
 
 // Send SYNC message to multicast group
-func SyncEncode(id uint8) {
+func SendSync(id uint8) {
 	// Build message, encode and send
 	message := SyncMessage{
 		MessageCode: Sync,
@@ -79,6 +79,7 @@ func SyncEncode(id uint8) {
 	sendMulticast(encoded)
 }
 
+// Decode sync bytes buffer and return code and id
 func SyncDecode(buffer string) (uint8, uint8) {
 	message := SyncMessage{}
 	err := binary.Read(strings.NewReader(buffer), binary.BigEndian, &message)
@@ -102,6 +103,7 @@ func SendFollowUp(id uint8, tMaster time.Time) {
 	sendMulticast(encoded)
 }
 
+// Decode follow up bytes buffer and return code, id and master time
 func FollowUpDecode(buffer string) (uint8, uint8, int64) {
 	message := FollowUpMessage{}
 	err := binary.Read(strings.NewReader(buffer), binary.BigEndian, &message)
@@ -124,6 +126,7 @@ func SendDelayRequest(ip net.Addr, id uint8) {
 	sendUnicast(ip, UnicastMasterPort, encoded)
 }
 
+// Decode delay request bytes buffer and return code and id
 func DelayRequestDecode(buffer string) (uint8, uint8) {
     message := DelayRequestMessage{}
     err := binary.Read(strings.NewReader(buffer), binary.BigEndian, &message)
@@ -147,6 +150,7 @@ func SendDelayResponse(ip net.Addr, id uint8, tM time.Time) {
 	sendUnicast(ip, UnicastSlavePort, encoded)
 }
 
+// Decode delay response bytes buffer and return code, id and master time
 func DelayResponseDecode(buffer string) (uint8, uint8, int64) {
     message := DelayResponseMessage{}
     err := binary.Read(strings.NewReader(buffer), binary.BigEndian, &message)

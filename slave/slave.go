@@ -69,11 +69,11 @@ func main() {
 		followUpCode, followUpId, tMaster := protocol.FollowUpDecode(s.Text())
 
 		if followUpCode == protocol.FollowUp {
-			utils.Trace(utils.SlaveFilename, "FOLLOWUP received with id: "+strconv.Itoa(int(followUpId)))
-
 			if followUpId == syncId {
 				// Calculate offset
 				offsetI = tMaster - tI
+
+                utils.Trace(utils.SlaveFilename, "FOLLOWUP received, offset determined: "+strconv.Itoa(int(offsetI))+" [μs]")
 			} else {
 				utils.Trace(utils.SlaveFilename, "FOLLOWUP id is not equal to previous SYNC id!")
 				continue
@@ -85,10 +85,10 @@ func main() {
 
 		// DELAY_REQUEST
 		rand.Seed(time.Now().UnixNano())
-		// TODO: uncomment that
 		// Wait between 4 and 60 times the sync period
 		//timeToWait := (rand.Intn(56) + 4) * protocol.SyncPeriod
 		timeToWait := 2
+        utils.Trace(utils.SlaveFilename, "Waiting "+strconv.Itoa(timeToWait)+" [s] before DELAYREQUEST")
 		time.Sleep(time.Duration(timeToWait) * time.Second)
 
 		// Record time
@@ -111,7 +111,8 @@ func main() {
                 // Calculate shift
                 shiftI = offsetI + delayI
 
-                utils.Trace(utils.SlaveFilename, "Shift_i determined: "+strconv.Itoa(int(shiftI))+" [μs]")
+                utils.Trace(utils.SlaveFilename, "Delay determined: "+strconv.Itoa(int(delayI))+" [μs]")
+                utils.Trace(utils.SlaveFilename, "Shift determined: "+strconv.Itoa(int(shiftI))+" [μs]")
                 delayRequestId++
             } else {
                 utils.Trace(utils.SlaveFilename, "DELAYRESPONSE id is not equal to DELAYREQUEST id!")
