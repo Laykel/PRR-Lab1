@@ -8,10 +8,10 @@
 package main
 
 import (
-	"github.com/Laykel/PRR-Lab1/protocol"
-	"github.com/Laykel/PRR-Lab1/utils"
-	"strconv"
-	"time"
+    "github.com/Laykel/PRR-Lab1/protocol"
+    "log"
+    "strconv"
+    "time"
 )
 
 // Call given function every given number of seconds
@@ -30,12 +30,14 @@ func syncAndFollowUp(id uint8) {
 	tMaster := time.Now()
 	protocol.SendSync(id)
 	protocol.SendFollowUp(id, tMaster)
-	utils.Trace(utils.MasterFilename, "SYNC and FOLLOW_UP sent with id: "+strconv.Itoa(int(id)))
+	log.Printf("SYNC and FOLLOW_UP sent with id: "+strconv.Itoa(int(id)))
 }
 
 // Main program for master clock
 // Periodically syncs and responds to DELAY_REQUEST
 func main() {
+    log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	// Periodically sync
 	go doEvery(protocol.SyncPeriod, syncAndFollowUp)
 
@@ -55,13 +57,13 @@ func main() {
 
 		// If the message received is indeed a DELAY_REQUEST
 		if delayRequestCode == protocol.DelayRequest {
-			utils.Trace(utils.MasterFilename, "DelayRequest received with id: "+strconv.Itoa(int(delayRequestId)))
+			log.Printf("DelayRequest received with id: "+strconv.Itoa(int(delayRequestId)))
 
 			// Send DELAY_RESPONSE
 			protocol.SendDelayResponse(addr, delayRequestId, tM)
-			utils.Trace(utils.MasterFilename, "DelayResponse sent")
+			log.Printf("DelayResponse sent")
 		} else {
-			utils.Trace(utils.MasterFilename, "No DELAYREQUEST was received!")
+			log.Printf("No DELAYREQUEST was received!")
 		}
 	}
 }

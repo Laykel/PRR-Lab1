@@ -10,7 +10,6 @@ package main
 import (
 	"fmt"
 	"github.com/Laykel/PRR-Lab1/protocol"
-	"github.com/Laykel/PRR-Lab1/utils"
 	"golang.org/x/net/ipv4"
 	"log"
 	"math/rand"
@@ -21,6 +20,8 @@ import (
 )
 
 func main() {
+    log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	var tI, offsetI, tES, shiftI int64
 	var delayRequestId uint8
 
@@ -54,12 +55,12 @@ func main() {
 		syncCode, syncId := protocol.SyncDecode(s.Text())
 
 		if syncCode == protocol.Sync {
-			utils.Trace(utils.SlaveFilename, "SYNC received with id: "+strconv.Itoa(int(syncId)))
+			log.Printf("SYNC received with id: "+strconv.Itoa(int(syncId)))
 
 			// Record slave time
 			tI = time.Now().UnixNano() / int64(time.Microsecond)
 		} else {
-			utils.Trace(utils.SlaveFilename, "First message received was not a SYNC!")
+			log.Printf("First message received was not a SYNC!")
 			continue
 		}
 
@@ -73,13 +74,13 @@ func main() {
 				// Calculate offset
 				offsetI = tMaster - tI
 
-				utils.Trace(utils.SlaveFilename, "FOLLOWUP received, offset determined: "+strconv.Itoa(int(offsetI))+" [μs]")
+				log.Printf("FOLLOWUP received, offset determined: "+strconv.Itoa(int(offsetI))+" [μs]")
 			} else {
-				utils.Trace(utils.SlaveFilename, "FOLLOWUP id is not equal to previous SYNC id!")
+				log.Printf("FOLLOWUP id is not equal to previous SYNC id!")
 				continue
 			}
 		} else {
-			utils.Trace(utils.SlaveFilename, "No FOLLOWUP message was received!")
+			log.Printf("No FOLLOWUP message was received!")
 			continue
 		}
 
@@ -87,14 +88,14 @@ func main() {
 		rand.Seed(time.Now().UnixNano())
 		// Wait between 4 and 60 times the sync period
 		timeToWait := (rand.Intn(56) + 4) * protocol.SyncPeriod
-		utils.Trace(utils.SlaveFilename, "Waiting "+strconv.Itoa(timeToWait)+" [s] before DELAYREQUEST")
+		log.Printf("Waiting "+strconv.Itoa(timeToWait)+" [s] before DELAYREQUEST")
 		time.Sleep(time.Duration(timeToWait) * time.Second)
 
 		// Record time and add offset
 		tES = time.Now().UnixNano() / int64(time.Microsecond) + offsetI
 
 		protocol.SendDelayRequest(addr, delayRequestId)
-		utils.Trace(utils.SlaveFilename, "DelayRequest sent")
+		log.Printf("DelayRequest sent")
 
 		// DELAY_RESPONSE
 		// Would be good to add a timeout...
@@ -103,7 +104,7 @@ func main() {
 		delayResponseCode, delayResponseId, tM := protocol.DelayResponseDecode(s.Text())
 
 		if delayResponseCode == protocol.DelayResponse {
-			utils.Trace(utils.SlaveFilename, "DelayResponse received with id: "+strconv.Itoa(int(delayResponseId)))
+			log.Printf("DelayResponse received with id: "+strconv.Itoa(int(delayResponseId)))
 
 			if delayResponseId == delayRequestId {
 				// Calculate delay
@@ -111,14 +112,14 @@ func main() {
 				// Calculate shift
 				shiftI = offsetI + delayI
 
-				utils.Trace(utils.SlaveFilename, "Delay determined: "+strconv.Itoa(int(delayI))+" [μs]")
-				utils.Trace(utils.SlaveFilename, "Shift determined: "+strconv.Itoa(int(shiftI))+" [μs]")
+				log.Printf("Delay determined: "+strconv.Itoa(int(delayI))+" [μs]")
+				log.Printf("Shift determined: "+strconv.Itoa(int(shiftI))+" [μs]")
 				delayRequestId++
 			} else {
-				utils.Trace(utils.SlaveFilename, "DELAYRESPONSE id is not equal to DELAYREQUEST id!")
+				log.Printf("DELAYRESPONSE id is not equal to DELAYREQUEST id!")
 			}
 		} else {
-			utils.Trace(utils.SlaveFilename, "No DELAYRESPONSE was received!")
+			log.Printf("No DELAYRESPONSE was received!")
 		}
 
 		fmt.Println("------------------------------------")
