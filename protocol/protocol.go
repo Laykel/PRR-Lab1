@@ -21,7 +21,7 @@ const (
 	MulticastAddress  = "224.97.6.27:2204"
 	UnicastMasterPort = ":2205"
 	UnicastSlavePort  = ":2206"
-	SyncPeriod        = 4 // [s] Period between synchronizations
+	SyncPeriod        = 2 // [s] Period between synchronizations
 	MaxBufferSize     = 32
 )
 

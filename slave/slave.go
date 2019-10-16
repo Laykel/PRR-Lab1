@@ -27,11 +27,8 @@ func main() {
 	for {
 		//Create unicast and multicast connection
 		connMulticast := protocol.ListenUDPConnection(protocol.MulticastAddress)
-		defer connMulticast.Close()
 		connUnicast := protocol.ListenUDPConnection(protocol.UnicastSlavePort)
-		defer connUnicast.Close()
 
-		// Get server's ipv4
 		p := ipv4.NewPacketConn(connMulticast)
 		masterAddr, err := net.ResolveUDPAddr("udp", protocol.MulticastAddress)
 		if err != nil {
@@ -93,13 +90,14 @@ func main() {
 		utils.Trace(utils.SlaveFilename, "Waiting "+strconv.Itoa(timeToWait)+" [s] before DELAYREQUEST")
 		time.Sleep(time.Duration(timeToWait) * time.Second)
 
-		// Record time
-		tES = time.Now().UnixNano() / int64(time.Microsecond)
+		// Record time and add offset
+		tES = time.Now().UnixNano() / int64(time.Microsecond) + offsetI
 
 		protocol.SendDelayRequest(addr, delayRequestId)
 		utils.Trace(utils.SlaveFilename, "DelayRequest sent")
 
 		// DELAY_RESPONSE
+		// Would be good to add a timeout...
 		s, addr = protocol.ConnToScanner(connUnicast, buf)
 		s.Scan()
 		delayResponseCode, delayResponseId, tM := protocol.DelayResponseDecode(s.Text())
