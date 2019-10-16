@@ -21,33 +21,36 @@ import (
 )
 
 func main() {
-	connMulticast := protocol.ListenUDPConnection(protocol.MulticastAddress)
-	defer connMulticast.Close()
-	connUnicast := protocol.ListenUDPConnection(protocol.UnicastSlavePort)
-	defer connUnicast.Close()
-
-	// Get server's ipv4
-	p := ipv4.NewPacketConn(connMulticast)
-	addr, err := net.ResolveUDPAddr("udp", protocol.MulticastAddress)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var interf *net.Interface
-	if runtime.GOOS == "darwin" {
-		interf, _ = net.InterfaceByName("en0")
-	}
-
-	// Join multicast group
-	if err = p.JoinGroup(interf, addr); err != nil {
-		log.Fatal(err)
-	}
-
 	var tI, offsetI, tES, shiftI int64
 	var delayRequestId uint8
 
 	for {
+		//Create unicast and multicast connection
+		connMulticast := protocol.ListenUDPConnection(protocol.MulticastAddress)
+		defer connMulticast.Close()
+		connUnicast := protocol.ListenUDPConnection(protocol.UnicastSlavePort)
+		defer connUnicast.Close()
+
+		// Get server's ipv4
+		p := ipv4.NewPacketConn(connMulticast)
+		masterAddr, err := net.ResolveUDPAddr("udp", protocol.MulticastAddress)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var interf *net.Interface
+		// For MacOS
+		if runtime.GOOS == "darwin" {
+			interf, _ = net.InterfaceByName("en0")
+		}
+
+		// Join multicast group
+		if err = p.JoinGroup(interf, masterAddr); err != nil {
+			log.Fatal(err)
+		}
+
 		buf := make([]byte, protocol.MaxBufferSize)
+
 		// SYNC
 		s, addr := protocol.ConnToScanner(connMulticast, buf)
 		s.Scan()
@@ -85,10 +88,8 @@ func main() {
 
 		// DELAY_REQUEST
 		rand.Seed(time.Now().UnixNano())
-		// TODO: uncomment
 		// Wait between 4 and 60 times the sync period
-		//timeToWait := (rand.Intn(56) + 4) * protocol.SyncPeriod
-		timeToWait := 6
+		timeToWait := (rand.Intn(56) + 4) * protocol.SyncPeriod
 		utils.Trace(utils.SlaveFilename, "Waiting "+strconv.Itoa(timeToWait)+" [s] before DELAYREQUEST")
 		time.Sleep(time.Duration(timeToWait) * time.Second)
 
@@ -126,19 +127,5 @@ func main() {
 
 		connMulticast.Close()
 		connUnicast.Close()
-		connMulticast = protocol.ListenUDPConnection(protocol.MulticastAddress)
-		connUnicast = protocol.ListenUDPConnection(protocol.UnicastSlavePort)
-
-		// Get server's ipv4
-		p = ipv4.NewPacketConn(connMulticast)
-		addr, err = net.ResolveUDPAddr("udp", protocol.MulticastAddress)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// Join multicast group
-		if err = p.JoinGroup(interf, addr); err != nil {
-			log.Fatal(err)
-		}
 	}
 }
