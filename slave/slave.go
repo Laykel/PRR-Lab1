@@ -124,7 +124,7 @@ func main() {
 
 		fmt.Println("------------------------------------")
 
-		connMulticast.Close()
-		connUnicast.Close()
+        _ = connMulticast.Close()
+        _ = connUnicast.Close()
 	}
 }

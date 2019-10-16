@@ -26,6 +26,7 @@ func doEvery(seconds uint, f func(uint8)) {
 	}
 }
 
+// Calls sync and follow up send functions
 func syncAndFollowUp(id uint8) {
 	tMaster := time.Now()
 	protocol.SendSync(id)

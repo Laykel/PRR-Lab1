@@ -33,22 +33,26 @@ const (
 	DelayResponse uint8 = 3
 )
 
+// SYNC type
 type SyncMessage struct {
 	MessageCode uint8
 	Id          uint8
 }
 
+// FOLLOW_UP type
 type FollowUpMessage struct {
 	MessageCode uint8
 	Id          uint8
 	Time        int64
 }
 
+// DELAY_REQUEST type
 type DelayRequestMessage struct {
 	MessageCode uint8
 	Id          uint8
 }
 
+// DELAY_RESPONSE type
 type DelayResponseMessage struct {
 	MessageCode uint8
 	Id          uint8
