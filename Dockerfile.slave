@@ -1,0 +1,14 @@
+FROM golang:1.13.1
+
+# RUN go get -t github.com/Laykel/PRR-Lab1/slave
+COPY . /go/src/github.com/Laykel/PRR-Lab1
+
+WORKDIR /go/src/github.com/Laykel/PRR-Lab1
+RUN go get ./...
+
+RUN go install -v github.com/Laykel/PRR-Lab1/slave
+
+EXPOSE 2205
+EXPOSE 2206
+
+CMD ["slave"]

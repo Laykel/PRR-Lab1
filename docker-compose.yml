@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  clock-master:
+    build:
+        context: .
+        dockerfile: Dockerfile.master
+
+  clock-slave:
+    build:
+        context: .
+        dockerfile: Dockerfile.slave

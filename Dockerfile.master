@@ -1,0 +1,10 @@
+FROM golang:1.13.1
+
+# RUN go get -t github.com/Laykel/PRR-Lab1/master
+COPY . /go/src/github.com/Laykel/PRR-Lab1
+
+RUN go install -v github.com/Laykel/PRR-Lab1/master
+
+EXPOSE 2205
+
+CMD ["master"]
