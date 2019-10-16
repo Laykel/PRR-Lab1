@@ -8,12 +8,12 @@
 package protocol
 
 import (
-    "bufio"
-    "bytes"
-    "fmt"
-    "log"
-    "net"
-    "strings"
+	"bufio"
+	"bytes"
+	"fmt"
+	"log"
+	"net"
+	"strings"
 )
 
 // Send message to multicast group
@@ -51,13 +51,13 @@ func sendUnicast(ip net.Addr, port string, message *bytes.Buffer) {
 
 // Listen a UDP connection specified by an address
 func ListenUDPConnection(address string) net.PacketConn {
-    result, err := net.ListenPacket("udp", address)
+	result, err := net.ListenPacket("udp", address)
 
-    if err != nil {
-        log.Fatal(err)
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    return result
+	return result
 }
 
 // Take connection and put its message in a Scanner

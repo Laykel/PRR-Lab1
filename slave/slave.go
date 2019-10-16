@@ -43,7 +43,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-
 	var tI, offsetI, tES, shiftI int64
 	var delayRequestId uint8
 
@@ -64,7 +63,6 @@ func main() {
 			continue
 		}
 
-
 		// FOLLOW_UP
 		s, addr = protocol.ConnToScanner(connMulticast, buf)
 		s.Scan()
@@ -75,7 +73,7 @@ func main() {
 				// Calculate offset
 				offsetI = tMaster - tI
 
-                utils.Trace(utils.SlaveFilename, "FOLLOWUP received, offset determined: "+strconv.Itoa(int(offsetI))+" [μs]")
+				utils.Trace(utils.SlaveFilename, "FOLLOWUP received, offset determined: "+strconv.Itoa(int(offsetI))+" [μs]")
 			} else {
 				utils.Trace(utils.SlaveFilename, "FOLLOWUP id is not equal to previous SYNC id!")
 				continue
@@ -87,10 +85,11 @@ func main() {
 
 		// DELAY_REQUEST
 		rand.Seed(time.Now().UnixNano())
+		// TODO: uncomment
 		// Wait between 4 and 60 times the sync period
 		//timeToWait := (rand.Intn(56) + 4) * protocol.SyncPeriod
 		timeToWait := 6
-        utils.Trace(utils.SlaveFilename, "Waiting "+strconv.Itoa(timeToWait)+" [s] before DELAYREQUEST")
+		utils.Trace(utils.SlaveFilename, "Waiting "+strconv.Itoa(timeToWait)+" [s] before DELAYREQUEST")
 		time.Sleep(time.Duration(timeToWait) * time.Second)
 
 		// Record time
@@ -102,47 +101,39 @@ func main() {
 		// DELAY_RESPONSE
 		s, addr = protocol.ConnToScanner(connUnicast, buf)
 		s.Scan()
-        delayResponseCode, delayResponseId, tM := protocol.DelayResponseDecode(s.Text())
+		delayResponseCode, delayResponseId, tM := protocol.DelayResponseDecode(s.Text())
 
-        if delayResponseCode == protocol.DelayResponse {
-            utils.Trace(utils.SlaveFilename, "DelayResponse received with id: "+strconv.Itoa(int(delayResponseId)))
+		if delayResponseCode == protocol.DelayResponse {
+			utils.Trace(utils.SlaveFilename, "DelayResponse received with id: "+strconv.Itoa(int(delayResponseId)))
 
-            if delayResponseId == delayRequestId {
-                // Calculate delay
-                delayI := (tM - tES) / 2
-                // Calculate shift
-                shiftI = offsetI + delayI
+			if delayResponseId == delayRequestId {
+				// Calculate delay
+				delayI := (tM - tES) / 2
+				// Calculate shift
+				shiftI = offsetI + delayI
 
-                utils.Trace(utils.SlaveFilename, "Delay determined: "+strconv.Itoa(int(delayI))+" [μs]")
-                utils.Trace(utils.SlaveFilename, "Shift determined: "+strconv.Itoa(int(shiftI))+" [μs]")
-                delayRequestId++
-            } else {
-                utils.Trace(utils.SlaveFilename, "DELAYRESPONSE id is not equal to DELAYREQUEST id!")
-            }
-        } else {
-            utils.Trace(utils.SlaveFilename, "No DELAYRESPONSE was received!")
-        }
+				utils.Trace(utils.SlaveFilename, "Delay determined: "+strconv.Itoa(int(delayI))+" [μs]")
+				utils.Trace(utils.SlaveFilename, "Shift determined: "+strconv.Itoa(int(shiftI))+" [μs]")
+				delayRequestId++
+			} else {
+				utils.Trace(utils.SlaveFilename, "DELAYRESPONSE id is not equal to DELAYREQUEST id!")
+			}
+		} else {
+			utils.Trace(utils.SlaveFilename, "No DELAYRESPONSE was received!")
+		}
 
-        fmt.Println("------------------------------------")
+		fmt.Println("------------------------------------")
 
-        s = nil
-        buf = nil
-
-        connMulticast.Close()
-        connUnicast.Close()
+		connMulticast.Close()
+		connUnicast.Close()
 		connMulticast = protocol.ListenUDPConnection(protocol.MulticastAddress)
 		connUnicast = protocol.ListenUDPConnection(protocol.UnicastSlavePort)
 
 		// Get server's ipv4
-		p := ipv4.NewPacketConn(connMulticast)
-		addr, err := net.ResolveUDPAddr("udp", protocol.MulticastAddress)
+		p = ipv4.NewPacketConn(connMulticast)
+		addr, err = net.ResolveUDPAddr("udp", protocol.MulticastAddress)
 		if err != nil {
 			log.Fatal(err)
-		}
-
-		var interf *net.Interface
-		if runtime.GOOS == "darwin" {
-			interf, _ = net.InterfaceByName("en0")
 		}
 
 		// Join multicast group

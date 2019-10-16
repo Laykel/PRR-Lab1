@@ -8,10 +8,10 @@
 package main
 
 import (
-    "github.com/Laykel/PRR-Lab1/protocol"
-    "github.com/Laykel/PRR-Lab1/utils"
-    "strconv"
-    "time"
+	"github.com/Laykel/PRR-Lab1/protocol"
+	"github.com/Laykel/PRR-Lab1/utils"
+	"strconv"
+	"time"
 )
 
 // Call given function every given number of seconds
@@ -27,10 +27,10 @@ func doEvery(seconds uint, f func(uint8)) {
 }
 
 func syncAndFollowUp(id uint8) {
-    tMaster := time.Now()
+	tMaster := time.Now()
 	protocol.SendSync(id)
 	protocol.SendFollowUp(id, tMaster)
-	utils.Trace(utils.MasterFilename, "SYNC and FOLLOW_UP sent (multicast) id : " + strconv.Itoa(int(id)))
+	utils.Trace(utils.MasterFilename, "SYNC and FOLLOW_UP sent with id: "+strconv.Itoa(int(id)))
 }
 
 // Main program for master clock
@@ -46,22 +46,22 @@ func main() {
 	buf := make([]byte, protocol.MaxBufferSize)
 	for {
 		// Receive DELAY_REQUEST
-        s, addr := protocol.ConnToScanner(conn, buf)
-        s.Scan()
-        delayRequestCode, delayRequestId := protocol.DelayRequestDecode(s.Text())
+		s, addr := protocol.ConnToScanner(conn, buf)
+		s.Scan()
+		delayRequestCode, delayRequestId := protocol.DelayRequestDecode(s.Text())
 
-        // Get time at request reception
-        tM := time.Now()
+		// Get time at request reception
+		tM := time.Now()
 
-        // If the message received is indeed a DELAY_REQUEST
-        if delayRequestCode == protocol.DelayRequest {
-            utils.Trace(utils.MasterFilename, "DelayRequest received with id: "+strconv.Itoa(int(delayRequestId)))
+		// If the message received is indeed a DELAY_REQUEST
+		if delayRequestCode == protocol.DelayRequest {
+			utils.Trace(utils.MasterFilename, "DelayRequest received with id: "+strconv.Itoa(int(delayRequestId)))
 
-            // Send DELAY_RESPONSE
-            protocol.SendDelayResponse(addr, delayRequestId, tM)
-            utils.Trace(utils.MasterFilename, "DelayResponse sent")
+			// Send DELAY_RESPONSE
+			protocol.SendDelayResponse(addr, delayRequestId, tM)
+			utils.Trace(utils.MasterFilename, "DelayResponse sent")
 		} else {
-            utils.Trace(utils.MasterFilename, "No DELAYREQUEST was received!")
-        }
+			utils.Trace(utils.MasterFilename, "No DELAYREQUEST was received!")
+		}
 	}
 }

@@ -128,13 +128,13 @@ func SendDelayRequest(ip net.Addr, id uint8) {
 
 // Decode delay request bytes buffer and return code and id
 func DelayRequestDecode(buffer string) (uint8, uint8) {
-    message := DelayRequestMessage{}
-    err := binary.Read(strings.NewReader(buffer), binary.BigEndian, &message)
-    if err != nil {
-        log.Fatal(err)
-    }
+	message := DelayRequestMessage{}
+	err := binary.Read(strings.NewReader(buffer), binary.BigEndian, &message)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    return message.MessageCode, message.Id
+	return message.MessageCode, message.Id
 }
 
 // Send DELAY_RESPONSE message to specified ip
@@ -152,11 +152,11 @@ func SendDelayResponse(ip net.Addr, id uint8, tM time.Time) {
 
 // Decode delay response bytes buffer and return code, id and master time
 func DelayResponseDecode(buffer string) (uint8, uint8, int64) {
-    message := DelayResponseMessage{}
-    err := binary.Read(strings.NewReader(buffer), binary.BigEndian, &message)
-    if err != nil {
-        log.Fatal(err)
-    }
+	message := DelayResponseMessage{}
+	err := binary.Read(strings.NewReader(buffer), binary.BigEndian, &message)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    return message.MessageCode, message.Id, message.Time
+	return message.MessageCode, message.Id, message.Time
 }

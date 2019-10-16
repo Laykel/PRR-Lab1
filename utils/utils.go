@@ -8,7 +8,7 @@
 package utils
 
 import (
-    "log"
+	"log"
 )
 
 const (
