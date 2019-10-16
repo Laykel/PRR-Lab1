@@ -1,3 +1,10 @@
+// Lab 1 - clock synchronization
+// File: slave/slave.go
+// Authors: Jael Dubey, Luc Wachter
+// Go version: 1.13.1 (linux/amd64)
+
+// Main package for slave program
+// Listens for the master clock's messages and sends delay requests to synchronize their clocks
 package main
 
 import (
@@ -31,7 +38,7 @@ func main() {
 		interf, _ = net.InterfaceByName("en0")
 	}
 
-	// Listen for message on multicast group
+	// Join multicast group
 	if err = p.JoinGroup(interf, addr); err != nil {
 		log.Fatal(err)
 	}

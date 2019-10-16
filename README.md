@@ -30,13 +30,13 @@ approximativement synchrone avec les autres tâches sur d'autres sites de l'appl
 uniquement les esclaves et le maître qui doivent se synchroniser.
 
 La procédure de synchronisation est réalisée en 2 étapes. La première détermine l'écart temporel,
-écart(i), entre le maître et les esclaves, alors que la seconde corrige le délai de transmission et les
-latences, délai(i), entre le maître et ses esclaves. Leur somme donne décalage(i) = écart(i) + délai(i),
+`écart(i)`, entre le maître et les esclaves, alors que la seconde corrige le délai de transmission et les
+latences, `délai(i)`, entre le maître et ses esclaves. Leur somme donne `décalage(i) = écart(i) + délai(i)`,
 pour le site i.
 
 Périodiquement, le maître diffuse 2 messages. Le premier message est de type SYNC et contient un
 identifiant. Le second message, FOLLOW_UP, diffusé immédiatement après le premier, contient
-l'heure, tmaître, auquel le maître a émis le message SYNC.
+l'heure, `tmaître`, auquel le maître a émis le message SYNC.
 
 ```
 boucle
@@ -73,7 +73,7 @@ est renvoyé par le maître et sert de contrôle.
 
 Cette seconde étape est exécutée irrégulièrement et à des intervalles de temps supérieurs à k. L'esclave
 entame la seconde étape pour la première fois après la première étape et après un temps aléatoire tiré
-de l'intervalle [4k,60k]. Toutes les fois subséquentes, cette étape se fait après la précédente et après un
+de l'intervalle `[4k,60k]`. Toutes les fois subséquentes, cette étape se fait après la précédente et après un
 temps aléatoire tiré depuis le même intervalle.
 
 La figure ci-dessous illustre un échange typique.

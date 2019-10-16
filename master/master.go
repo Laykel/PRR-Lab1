@@ -1,4 +1,10 @@
-// TODO: headers
+// Lab 1 - clock synchronization
+// File: master/master.go
+// Authors: Jael Dubey, Luc Wachter
+// Go version: 1.13.1 (linux/amd64)
+
+// Main package for master program
+// Synchronizes slaves regularly and responds to delay requests
 package main
 
 import (

@@ -1,3 +1,10 @@
+// Lab 1 - clock synchronization
+// File: protocol/udp.go
+// Authors: Jael Dubey, Luc Wachter
+// Go version: 1.13.1 (linux/amd64)
+
+// The udp part of the protocol package contains functions to send and receive
+// messages through UDP
 package protocol
 
 import (
@@ -42,6 +49,17 @@ func sendUnicast(ip net.Addr, port string, message *bytes.Buffer) {
 	}
 }
 
+// Listen a UDP connection specified by an address
+func ListenUDPConnection(address string) net.PacketConn {
+    result, err := net.ListenPacket("udp", address)
+
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    return result
+}
+
 // Take connection and put its message in a Scanner
 func ConnToScanner(conn net.PacketConn, buffer []byte) (s *bufio.Scanner, addr net.Addr) {
 	n, addr, err := conn.ReadFrom(buffer)
@@ -52,15 +70,4 @@ func ConnToScanner(conn net.PacketConn, buffer []byte) (s *bufio.Scanner, addr n
 	s = bufio.NewScanner(bytes.NewReader(buffer[0:n]))
 
 	return
-}
-
-// Listen a UDP connection specified by an address
-func ListenUDPConnection(address string) net.PacketConn {
-	result, err := net.ListenPacket("udp", address)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return result
 }
